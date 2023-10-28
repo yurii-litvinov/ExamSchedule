@@ -15,10 +15,10 @@ jobs:
           dotnet-version: '7.0.x'
 
       - name: Build
-        run: for file in `find ./ -type f -name "*.sln"`; do dotnet build $file; done
+        run: dotnet build
 
       - name: Tests
-        run: for file in `find ./ -type f -name "*.sln"`; do dotnet test $file; done
+        run: dotnet test
 
       - name: Dotnet format
-        run: for file in `find ./ -type f -name "*.sln"`; do dotnet format $file; done
+        run: dotnet format

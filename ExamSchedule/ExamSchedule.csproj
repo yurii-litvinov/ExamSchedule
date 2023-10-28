@@ -9,14 +9,18 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.3" />
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     </ItemGroup>
 
-<!--    <ItemGroup>-->
-<!--      <Content Include="..\.dockerignore">-->
-<!--        <Link>.dockerignore</Link>-->
-<!--      </Content>-->
-<!--    </ItemGroup>-->
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="../ScheduleParser/ScheduleParser.csproj" />
