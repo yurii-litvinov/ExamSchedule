@@ -58,7 +58,26 @@ public class ScheduleParser
             foreach (var row in tables[i + 1].Elements<TableRow>().ToList()
                          .Where(row => !row.InnerText.Contains("Дата")))
             {
-                var aboutExam = row.Skip(3).Select(cell => cell.InnerText).ToList();
+                var aboutExam = row.Skip(3).Take(2).Select(cell => cell.InnerText).ToList();
+                foreach (var examCell in row.Skip(5))
+                {
+                    var examCellText = examCell.InnerText;
+                    try
+                    {
+                        var par = examCell.Descendants<Paragraph>().First(p => p.InnerText != string.Empty);
+                        var lecturer =
+                            par.Descendants<DocumentFormat.OpenXml.Wordprocessing.Run>().ToList()[^3].InnerText;
+
+                        aboutExam.Add(
+                            string.Concat(examCellText.Take(examCellText.IndexOf(lecturer, StringComparison.Ordinal))) +
+                            " " + lecturer);
+                    }
+                    catch
+                    {
+                        aboutExam.Add(string.Empty);
+                    }
+                }
+
                 _dataTable.Rows
                     .Add(parList[0], aboutExam[0], parList[2], aboutExam[^3], aboutExam[^2], aboutExam[^1]);
             }
@@ -101,6 +120,8 @@ public class ScheduleParser
             return fillingMessage;
         }
 
+        spreadSheetStream.Seek(0, SeekOrigin.Begin);
+
         var uploadLinkResult =
             await client.GetAsync("https://cloud-api.yandex.net/v1/disk/resources/upload?path=" +
                                   path
@@ -141,7 +162,8 @@ public class ScheduleParser
 
         var worksheetPart = workbookPart.WorksheetParts.First();
 
-        ExportRowsToDataTable(worksheetPart.Worksheet.Descendants<Row>());
+        ExportRowsToDataTable(worksheetPart.Worksheet.Descendants<Row>(),
+            workbookPart.SharedStringTablePart?.SharedStringTable);
         var sheetData = new SheetData();
         worksheetPart.Worksheet = new Worksheet(sheetData);
 
@@ -188,7 +210,8 @@ public class ScheduleParser
     /// Export rows to <see cref="DataTable"/>
     /// </summary>
     /// <param name="rows">Rows from table.</param>
-    private void ExportRowsToDataTable(IEnumerable<Row> rows)
+    /// /// <param name="sharedStringTable">Shared string table.</param>
+    private void ExportRowsToDataTable(IEnumerable<Row> rows, SharedStringTable? sharedStringTable)
     {
         foreach (Row row in rows.Skip(1))
         {
@@ -200,18 +223,32 @@ public class ScheduleParser
                 continue;
             }
 
-            if (cells.First().InnerText == string.Empty || _dataTable.AsEnumerable().Any(r =>
-                    r.Field<string>("Студент") == cells[0].InnerText &&
-                    r.Field<string>("Дисциплина") == cells[1].InnerText &&
-                    r.Field<string>("Группа") == cells[2].InnerText))
-            {
-                continue;
-            }
-
             for (int i = 0; i < row.Descendants<Cell>().Count(); i++)
             {
                 var cell = row.Descendants<Cell>().ElementAt(i);
-                tempRow[i] = cell.InnerText;
+                if (cell.CellValue == null)
+                {
+                    return;
+                }
+
+                var value = cell.CellValue.InnerXml;
+
+                if (cell.DataType is { Value: CellValues.SharedString } && sharedStringTable != null)
+                {
+                    tempRow[i] = sharedStringTable.ChildElements[int.Parse(value)].InnerText;
+                }
+                else
+                {
+                    tempRow[i] = value;
+                }
+            }
+
+            if (tempRow.Field<string>(0) == string.Empty || _dataTable.AsEnumerable().Any(r =>
+                    r.Field<string?>("Студент") == tempRow.Field<string>(0) &&
+                    r.Field<string>("Дисциплина") == tempRow.Field<string>(1) &&
+                    r.Field<string>("Группа") == tempRow.Field<string>(2)))
+            {
+                continue;
             }
 
             _dataTable.Rows.Add(tempRow);
