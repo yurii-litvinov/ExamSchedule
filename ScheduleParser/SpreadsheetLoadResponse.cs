@@ -1,5 +1,5 @@
-// <copyright file="SpreadsheetLoadResponse.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+// <copyright file="SpreadsheetLoadResponse.cs" company="Gleb Kargin">
+// Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
 namespace ScheduleParser;
