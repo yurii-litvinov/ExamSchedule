@@ -10,7 +10,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 /// </summary>
 public class ScheduleParser
 {
-    private readonly DataTable _dataTable;
+    private DataTable _dataTable;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ScheduleParser"/> class.
@@ -32,6 +32,28 @@ public class ScheduleParser
         }
 
         ParseNewFile(stream);
+    }
+
+    private static TimeSpan SortingFunction(DataRow row)
+    {
+        var examCells = new List<string?>
+            { row["Экзамен"].ToString(), row["Пересдача"].ToString(), row["Комиссия"].ToString() };
+        var timeSpans = examCells.Where(s => !string.IsNullOrEmpty(s))
+            .Select(s =>
+                DateTime.ParseExact(string.Join(" ", s?.Split().Take(2).ToList() ?? new List<string>()),
+                    "dd.MM.yyyy HH:mm",
+                    System.Globalization.CultureInfo.InvariantCulture).Subtract(DateTime.Now)).ToList();
+        if (timeSpans.Count == 0)
+        {
+            return TimeSpan.MaxValue;
+        }
+
+        if (timeSpans.All(span => span < TimeSpan.Zero))
+        {
+            return timeSpans.Min();
+        }
+
+        return timeSpans.Where(span => span >= TimeSpan.Zero).Min();
     }
 
     /// <summary>
@@ -66,7 +88,8 @@ public class ScheduleParser
                     {
                         var par = examCell.Descendants<Paragraph>().First(p => p.InnerText != string.Empty);
                         var lecturer =
-                            par.Descendants<DocumentFormat.OpenXml.Wordprocessing.Run>().ToList()[^3].InnerText;
+                            par.Descendants<DocumentFormat.OpenXml.Wordprocessing.Run>()
+                                .Where(r => r.InnerText != string.Empty).ToList().Last().InnerText;
 
                         aboutExam.Add(
                             string.Concat(examCellText.Take(examCellText.IndexOf(lecturer, StringComparison.Ordinal))) +
@@ -164,6 +187,10 @@ public class ScheduleParser
 
         ExportRowsToDataTable(worksheetPart.Worksheet.Descendants<Row>(),
             workbookPart.SharedStringTablePart?.SharedStringTable);
+
+        var dataRows = _dataTable.Select().OrderBy(SortingFunction).ToArray();
+        _dataTable = dataRows.CopyToDataTable();
+
         var sheetData = new SheetData();
         worksheetPart.Worksheet = new Worksheet(sheetData);
 
