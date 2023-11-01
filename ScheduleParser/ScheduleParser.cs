@@ -1,5 +1,5 @@
-﻿// <copyright file="ScheduleParser.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+﻿// <copyright file="ScheduleParser.cs" company="Gleb Kargin">
+// Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
 namespace ScheduleParser;

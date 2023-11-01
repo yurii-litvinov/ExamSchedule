@@ -1,5 +1,5 @@
-// <copyright file="Program.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+// <copyright file="Program.cs" company="Gleb Kargin">
+// Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
 var builder = WebApplication.CreateBuilder(args);
