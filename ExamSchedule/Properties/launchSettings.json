@@ -16,7 +16,11 @@
       "launchUrl": "swagger",
       "applicationUrl": "http://localhost:5172",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "HOST": "localhost:5435",
+        "USERNAME": "postgres",
+        "PASSWORD": "postgres",
+        "DATABASE": "postgres"
       }
     },
     "https": {
@@ -26,7 +30,11 @@
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:7107;http://localhost:5172",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "HOST": "localhost:5435",
+        "USERNAME": "postgres",
+        "PASSWORD": "postgres",
+        "DATABASE": "postgres"
       }
     },
     "IIS Express": {
