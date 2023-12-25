@@ -4,14 +4,24 @@
 
 namespace ExamSchedule.Core.Queries;
 
+using Npgsql;
 using Dapper;
 using Models;
 
 /// <summary>
 /// Employee queries.
 /// </summary>
-public class EmployeeQueries : DbConnector
+public class EmployeeQueries : QueriesBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EmployeeQueries"/> class.
+    /// </summary>
+    /// <param name="connection">Instance of <see cref="NpgsqlConnection"/>.</param>
+    public EmployeeQueries(NpgsqlConnection connection)
+        : base(connection)
+    {
+    }
+
     /// <summary>
     /// Gets employees.
     /// </summary>

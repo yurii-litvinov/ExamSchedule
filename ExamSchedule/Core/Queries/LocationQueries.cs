@@ -4,14 +4,24 @@
 
 namespace ExamSchedule.Core.Queries;
 
+using Npgsql;
 using Dapper;
 using Models;
 
 /// <summary>
 /// Location queries.
 /// </summary>
-public class LocationQueries : DbConnector
+public class LocationQueries : QueriesBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LocationQueries"/> class.
+    /// </summary>
+    /// <param name="connection">Instance of <see cref="NpgsqlConnection"/>.</param>
+    public LocationQueries(NpgsqlConnection connection)
+        : base(connection)
+    {
+    }
+
     /// <summary>
     /// Gets locations.
     /// </summary>

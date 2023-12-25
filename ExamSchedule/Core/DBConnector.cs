@@ -15,12 +15,12 @@ public class DbConnector
     /// <summary>
     /// Instance of <see cref="NpgsqlConnection"/>.
     /// </summary>
-    protected readonly NpgsqlConnection connection;
+    public readonly NpgsqlConnection Connection;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DbConnector"/> class.
     /// </summary>
-    protected DbConnector()
+    public DbConnector()
     {
         var host = Environment.GetEnvironmentVariable("HOST");
         var username = Environment.GetEnvironmentVariable("USERNAME");
@@ -30,8 +30,8 @@ public class DbConnector
                                $"Username={username};" +
                                $"Password={password};" +
                                $"Database={database}";
-        this.connection = new NpgsqlConnection(connectionString);
-        this.connection.Open();
+        this.Connection = new NpgsqlConnection(connectionString);
+        this.Connection.Open();
         DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
 }

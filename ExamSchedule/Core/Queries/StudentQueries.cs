@@ -4,14 +4,24 @@
 
 namespace ExamSchedule.Core.Queries;
 
+using Npgsql;
 using Dapper;
 using Models;
 
 /// <summary>
 /// Student queries.
 /// </summary>
-public class StudentQueries : DbConnector
+public class StudentQueries : QueriesBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StudentQueries"/> class.
+    /// </summary>
+    /// <param name="connection">Instance of <see cref="NpgsqlConnection"/>.</param>
+    public StudentQueries(NpgsqlConnection connection)
+        : base(connection)
+    {
+    }
+
     /// <summary>
     /// Gets students.
     /// </summary>
