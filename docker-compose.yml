@@ -22,7 +22,7 @@ services:
     container_name: examschedule
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - HOST=localhost:5435
+      - HOST=db:5432
       - USERNAME=postgres
       - PASSWORD=postgres
       - DATABASE=postgres
