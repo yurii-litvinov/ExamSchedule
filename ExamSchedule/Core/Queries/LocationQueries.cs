@@ -4,24 +4,14 @@
 
 namespace ExamSchedule.Core.Queries;
 
-using Npgsql;
-using Dapper;
+using Microsoft.EntityFrameworkCore;
 using Models;
 
 /// <summary>
 /// Location queries.
 /// </summary>
-public class LocationQueries : QueriesBase
+public class LocationQueries(ScheduleContext context)
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="LocationQueries"/> class.
-    /// </summary>
-    /// <param name="connection">Instance of <see cref="NpgsqlConnection"/>.</param>
-    public LocationQueries(NpgsqlConnection connection)
-        : base(connection)
-    {
-    }
-
     /// <summary>
     /// Gets locations.
     /// </summary>
@@ -29,14 +19,13 @@ public class LocationQueries : QueriesBase
     /// <returns>List of locations.</returns>
     public async Task<IEnumerable<Location>> GetLocations(int? id = null)
     {
-        string commandText = "select * from location";
+        var result = await context.Locations.ToListAsync();
         if (id != null)
         {
-            commandText += $" where location_id = {id}";
+            result = result.Where(loc => loc.LocationId == id).ToList();
         }
 
-        var result = await this.connection.QueryAsync<Location>(commandText);
-        return result.ToList();
+        return result;
     }
 
     /// <summary>
@@ -44,10 +33,10 @@ public class LocationQueries : QueriesBase
     /// </summary>
     /// <param name="location">Input location.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> PostLocation(Location location)
+    public async Task<IResult> InsertLocation(Location location)
     {
-        await this.connection.QueryAsync<string>(
-            $"insert into location(location_id, classroom) values ({location.LocationId}, '{location.Classroom}');");
+        context.Locations.Add(location);
+        await context.SaveChangesAsync();
         return Results.Ok();
     }
 
@@ -63,9 +52,8 @@ public class LocationQueries : QueriesBase
         {
             var prev = this.GetLocations(id).Result.First();
 
-            var classroom = string.IsNullOrEmpty(prev.Classroom) ? prev.Classroom : location.Classroom;
-            await this.connection.QueryAsync<string>(
-                $"update location set classroom = '{classroom}' where location_id = {id}");
+            prev.Classroom = string.IsNullOrEmpty(prev.Classroom) ? prev.Classroom : location.Classroom;
+            await context.SaveChangesAsync();
             return Results.Ok();
         }
         catch (InvalidOperationException e)
@@ -81,8 +69,9 @@ public class LocationQueries : QueriesBase
     /// <returns>Response status.</returns>
     public async Task<IResult> DeleteLocation(int id)
     {
-        await this.connection.QueryAsync<string>(
-            $"delete from location where location_id = {id};");
+        var location = context.Locations.First(loc => loc.LocationId == id);
+        context.Locations.Remove(location);
+        await context.SaveChangesAsync();
         return Results.Ok();
     }
 }

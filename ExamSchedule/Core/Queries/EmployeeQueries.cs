@@ -4,24 +4,14 @@
 
 namespace ExamSchedule.Core.Queries;
 
-using Npgsql;
-using Dapper;
+using Microsoft.EntityFrameworkCore;
 using Models;
 
 /// <summary>
 /// Employee queries.
 /// </summary>
-public class EmployeeQueries : QueriesBase
+public class EmployeeQueries(ScheduleContext context)
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EmployeeQueries"/> class.
-    /// </summary>
-    /// <param name="connection">Instance of <see cref="NpgsqlConnection"/>.</param>
-    public EmployeeQueries(NpgsqlConnection connection)
-        : base(connection)
-    {
-    }
-
     /// <summary>
     /// Gets employees.
     /// </summary>
@@ -29,14 +19,13 @@ public class EmployeeQueries : QueriesBase
     /// <returns>List of employees.</returns>
     public async Task<IEnumerable<Employee>> GetEmployees(int? id = null)
     {
-        string commandText = "select * from employee";
+        var result = await context.Employees.ToListAsync();
         if (id != null)
         {
-            commandText += $" where employee_id = {id}";
+            result = result.Where(e => e.EmployeeId == id).ToList();
         }
 
-        var result = await this.connection.QueryAsync<Employee>(commandText);
-        return result.ToList();
+        return result;
     }
 
     /// <summary>
@@ -44,21 +33,28 @@ public class EmployeeQueries : QueriesBase
     /// </summary>
     /// <param name="emp">Input employee.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> PostEmployee(InputEmployee emp)
+    public async Task<IResult> InsertEmployee(InputEmployee emp)
     {
         if (emp.Checksum == string.Empty || emp.Email == string.Empty)
         {
             return Results.BadRequest("Checksum and Email fields are required");
         }
 
-        await this.connection.QueryAsync<string>(
-            $"insert into employee(first_name, last_name, middle_name, email, checksum) " +
-            $"values ('{emp.FirstName}', '{emp.LastName}', '{emp.MiddleName}', '{emp.Email}', '{emp.Checksum}');");
+        var newEmployee = new Employee()
+        {
+            FirstName = emp.FirstName,
+            LastName = emp.LastName,
+            MiddleName = emp.MiddleName,
+            Email = emp.Email,
+            Checksum = emp.Checksum,
+        };
+        context.Employees.Add(newEmployee);
+        await context.SaveChangesAsync();
         return Results.Ok();
     }
 
     /// <summary>
-    /// Updates employee.
+    /// Update employee.
     /// </summary>
     /// <param name="id"> Employee id.</param>
     /// <param name="emp">Input employee.</param>
@@ -67,16 +63,14 @@ public class EmployeeQueries : QueriesBase
     {
         try
         {
-            var prev = this.GetEmployees(id).Result.First();
+            var prev = context.Employees.First(e => e.EmployeeId == id);
 
-            var email = string.IsNullOrEmpty(emp.Email) ? prev.Email : emp.Email;
-            var checksum = string.IsNullOrEmpty(emp.Checksum) ? prev.Checksum : emp.Checksum;
-            var firstName = string.IsNullOrEmpty(emp.FirstName) ? prev.FirstName : emp.FirstName;
-            var lastName = string.IsNullOrEmpty(emp.LastName) ? prev.LastName : emp.LastName;
-            var middleName = string.IsNullOrEmpty(emp.MiddleName) ? prev.MiddleName : emp.MiddleName;
-            await this.connection.QueryAsync<string>(
-                $"update employee set email = '{email}', checksum = '{checksum}', first_name = '{firstName}'," +
-                $" last_name = '{lastName}', middle_name = '{middleName}' where employee_id = {id}");
+            prev.Email = string.IsNullOrEmpty(emp.Email) ? prev.Email : emp.Email;
+            prev.Checksum = string.IsNullOrEmpty(emp.Checksum) ? prev.Checksum : emp.Checksum;
+            prev.FirstName = string.IsNullOrEmpty(emp.FirstName) ? prev.FirstName : emp.FirstName;
+            prev.LastName = string.IsNullOrEmpty(emp.LastName) ? prev.LastName : emp.LastName;
+            prev.MiddleName = string.IsNullOrEmpty(emp.MiddleName) ? prev.MiddleName : emp.MiddleName;
+            await context.SaveChangesAsync();
             return Results.Ok();
         }
         catch (InvalidOperationException e)
@@ -92,8 +86,9 @@ public class EmployeeQueries : QueriesBase
     /// <returns>Response status.</returns>
     public async Task<IResult> DeleteEmployee(int id)
     {
-        await this.connection.QueryAsync<string>(
-            $"delete from employee where employee_id = {id};");
+        var employee = context.Employees.First(e => e.EmployeeId == id);
+        context.Employees.Remove(employee);
+        await context.SaveChangesAsync();
         return Results.Ok();
     }
 }

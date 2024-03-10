@@ -4,24 +4,14 @@
 
 namespace ExamSchedule.Core.Queries;
 
-using Npgsql;
-using Dapper;
+using Microsoft.EntityFrameworkCore;
 using Models;
 
 /// <summary>
 /// Student queries.
 /// </summary>
-public class StudentQueries : QueriesBase
+public class StudentQueries(ScheduleContext context)
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="StudentQueries"/> class.
-    /// </summary>
-    /// <param name="connection">Instance of <see cref="NpgsqlConnection"/>.</param>
-    public StudentQueries(NpgsqlConnection connection)
-        : base(connection)
-    {
-    }
-
     /// <summary>
     /// Gets students.
     /// </summary>
@@ -29,14 +19,13 @@ public class StudentQueries : QueriesBase
     /// <returns>List of students.</returns>
     public async Task<IEnumerable<Student>> GetStudents(int? id = null)
     {
-        string commandText = "select * from student";
+        var result = await context.Students.ToListAsync();
         if (id != null)
         {
-            commandText += $" where student_id = {id}";
+            result = result.Where(st => st.StudentId == id).ToList();
         }
 
-        var result = await this.connection.QueryAsync<Student>(commandText);
-        return result.ToList();
+        return result;
     }
 
     /// <summary>
@@ -44,11 +33,17 @@ public class StudentQueries : QueriesBase
     /// </summary>
     /// <param name="st">Input student.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> PostStudent(InputStudent st)
+    public async Task<IResult> InsertStudent(InputStudent st)
     {
-        await this.connection.QueryAsync<string>(
-            $"insert into student(first_name, last_name, middle_name, student_group) " +
-            $"VALUES ('{st.FirstName}', '{st.LastName}', '{st.MiddleName}', '{st.StudentGroup}');");
+        var student = new Student()
+        {
+            FirstName = st.FirstName,
+            LastName = st.LastName,
+            MiddleName = st.MiddleName,
+            StudentGroup = st.StudentGroup,
+        };
+        context.Students.Add(student);
+        await context.SaveChangesAsync();
         return Results.Ok();
     }
 
@@ -62,15 +57,13 @@ public class StudentQueries : QueriesBase
     {
         try
         {
-            var prev = this.GetStudents(id).Result.First();
+            var prev = context.Students.First(s => s.StudentId == id);
 
-            var group = string.IsNullOrEmpty(st.StudentGroup) ? prev.StudentGroup : st.StudentGroup;
-            var firstName = string.IsNullOrEmpty(st.FirstName) ? prev.FirstName : st.FirstName;
-            var lastName = string.IsNullOrEmpty(st.LastName) ? prev.LastName : st.LastName;
-            var middleName = string.IsNullOrEmpty(st.MiddleName) ? prev.MiddleName : st.MiddleName;
-            await this.connection.QueryAsync<string>(
-                $"update student set student_group = '{group}', first_name = '{firstName}'," +
-                $" last_name = '{lastName}', middle_name = '{middleName}' where student_id = {id}");
+            prev.StudentGroup = string.IsNullOrEmpty(st.StudentGroup) ? prev.StudentGroup : st.StudentGroup;
+            prev.FirstName = string.IsNullOrEmpty(st.FirstName) ? prev.FirstName : st.FirstName;
+            prev.LastName = string.IsNullOrEmpty(st.LastName) ? prev.LastName : st.LastName;
+            prev.MiddleName = string.IsNullOrEmpty(st.MiddleName) ? prev.MiddleName : st.MiddleName;
+            await context.SaveChangesAsync();
             return Results.Ok();
         }
         catch (InvalidOperationException e)
@@ -86,8 +79,9 @@ public class StudentQueries : QueriesBase
     /// <returns>Response status.</returns>
     public async Task<IResult> DeleteStudent(int id)
     {
-        await this.connection.QueryAsync<string>(
-            $"delete from student where student_id = {id};");
+        var student = context.Students.First(st => st.StudentId == id);
+        context.Students.Remove(student);
+        await context.SaveChangesAsync();
         return Results.Ok();
     }
 }

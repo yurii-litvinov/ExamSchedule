@@ -4,62 +4,40 @@
 
 namespace ExamSchedule.Core.Queries;
 
-using Npgsql;
-using Dapper;
+using Microsoft.EntityFrameworkCore;
 using Models;
 
 /// <summary>
 /// Exam queries.
 /// </summary>
-public class ExamQueries : QueriesBase
+public class ExamQueries(ScheduleContext context)
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ExamQueries"/> class.
-    /// </summary>
-    /// <param name="connection">Instance of <see cref="NpgsqlConnection"/>.</param>
-    public ExamQueries(NpgsqlConnection connection)
-        : base(connection)
-    {
-    }
-
     /// <summary>
     /// Gets exams.
     /// </summary>
     /// <param name="id">Exam id, by default set to null.</param>
     /// <returns>List of exams.</returns>
-    public async Task<IEnumerable<Exam>> GetExams(int? id = null)
+    public async Task<IEnumerable<object>> GetExams(int? id = null)
     {
-        string commandText = """
-                             select exam.exam_id,
-                                    (s.last_name || ' ' || s.first_name || ' ' || s.middle_name) as student_initials,
-                                    exam.title,
-                                    s.student_group,
-                                    et.title                                                     as type,
-                                    exam.date_time,
-                                    loc.classroom,
-                                    exam.type_id,
-                                    exam.student_id,
-                                    exam.location_id
-                             from exam
-                                      join public.student s on s.student_id = exam.student_id
-                                      join public.exam_type et on et.exam_type_id = exam.type_id
-                                      join public.location loc on exam.location_id = loc.location_id
-                             """;
+        var result = await (from exam in context.Exams
+            select new
+            {
+                exam.ExamId,
+                Student_initials = exam.Student.FirstName + ' ' + exam.Student.LastName,
+                exam.Title,
+                Student_group = exam.Student.StudentGroup,
+                Type = exam.Type.Title,
+                exam.DateTime,
+                exam.Location.Classroom,
+                Lecturers = context.ExamLecturers.Where(el => el.ExamId == exam.ExamId).Select(el => el.Lecturer)
+                    .ToList(),
+                exam.TypeId,
+                exam.StudentId,
+                exam.LocationId,
+            }).ToListAsync();
         if (id != null)
         {
-            commandText += $" where exam.exam_id = {id}";
-        }
-
-        var result = (await this.connection.QueryAsync<Exam>(commandText)).ToList();
-        foreach (var exam in result)
-        {
-            string examLecturerCommand = $"""
-                                          select (l.last_name || ' ' || l.first_name || ' ' || l.middle_name) as lecturer_initials
-                                          from exam_lecturer
-                                                   join public.lecturer l on l.lecturer_id = exam_lecturer.lecturer_id
-                                          where exam_id = {exam.ExamId};
-                                          """;
-            exam.LecturersInitials = (await this.connection.QueryAsync<string>(examLecturerCommand)).ToList();
+            result = result.Where(e => e.ExamId == id).ToList();
         }
 
         return result;
@@ -70,43 +48,42 @@ public class ExamQueries : QueriesBase
     /// </summary>
     /// <param name="exam">Input exam.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> PostExam(InputExam exam)
+    public async Task<IResult> InsertExam(InputExam exam)
     {
-        var lecturersIds = new List<string>();
-        foreach (var lecturerInitials in exam.LecturersInitials)
+        var lecturersIds = exam.LecturersInitials.Select(
+                lecturerInitials =>
+                    context.Lecturers
+                        .First(l => l.LastName + " " + l.FirstName + " " + l.MiddleName == lecturerInitials)
+                        .LecturerId)
+            .ToList();
+
+        var typeId = context.ExamTypes.First(et => et.Title == exam.Type).ExamTypeId;
+        var studentId = context.Students.First(
+            s =>
+                s.LastName + " " + s.FirstName + " " + s.MiddleName == exam.StudentInitials &&
+                s.StudentGroup == exam.StudentGroup).StudentId;
+        var locationId = context.Locations.First(loc => loc.Classroom == exam.Classroom).LocationId;
+
+        var newExam = new Exam()
         {
-            lecturersIds.Add((await this.connection.QueryAsync<string>(
-                $"""
-                 select lecturer_id
-                 from lecturer
-                 where last_name || ' ' || first_name || ' ' || middle_name = '{lecturerInitials}';
-                 """)).First());
-        }
-
-        var typeId =
-            (await this.connection.QueryAsync<string>(
-                $"select exam_type_id from exam_type where title = '{exam.Type}';"))
-            .First();
-        var studentId = (await this.connection.QueryAsync<string>(
-            $"""
-             select student_id
-             from student
-             where last_name || ' ' || first_name || ' ' || middle_name = '{exam.StudentInitials}'
-               and student_group = '{exam.StudentGroup}';
-             """)).First();
-        var locationId = (await this.connection.QueryAsync<string>(
-            $"select location_id from location where classroom = '{exam.Classroom}';")).First();
-        var examId = (await this.connection.QueryAsync<int>("select * from nextval('exam_id_seq')")).First();
-
-        string commandText =
-            $"insert into Exam(Exam_ID, Title, Type_ID, Student_ID, Date_Time, Location_ID) " +
-            $"values ({examId}, '{exam.Title}', {typeId}, {studentId}, '{exam.DateTime:yyyy-MM-dd hh:mm:ss}', {locationId});";
-        await this.connection.QueryAsync<Exam>(commandText);
+            Title = exam.Title,
+            TypeId = typeId,
+            StudentId = studentId,
+            DateTime = exam.DateTime,
+            LocationId = locationId,
+        };
+        context.Exams.Add(newExam);
         foreach (var lecturerId in lecturersIds)
         {
-            await this.connection.QueryAsync<string>(
-                $"insert into Exam_Lecturer(Exam_ID, Lecturer_ID) VALUES ({examId}, {lecturerId});");
+            context.ExamLecturers.Add(
+                new ExamLecturer()
+                {
+                    Exam = newExam,
+                    LecturerId = lecturerId,
+                });
         }
+
+        await context.SaveChangesAsync();
 
         return Results.Ok();
     }
@@ -119,66 +96,58 @@ public class ExamQueries : QueriesBase
     /// <returns>Response status.</returns>
     public async Task<IResult> UpdateExam(int id, InputExam exam)
     {
-        var prev = this.GetExams(id).Result.First();
-        var title = string.IsNullOrEmpty(exam.Title) ? prev.Title : exam.Title;
-        var typeId = prev.TypeId;
-        var studentId = prev.StudentId;
-        var locationId = prev.LocationId;
-        var dateTime = exam.DateTime == DateTime.MinValue ? prev.DateTime : exam.DateTime;
+        var prev = context.Exams.First(e => e.ExamId == id);
+        prev.Title = string.IsNullOrEmpty(exam.Title) ? prev.Title : exam.Title;
+        prev.DateTime = exam.DateTime == DateTime.MinValue ? prev.DateTime : exam.DateTime;
 
         if (!string.IsNullOrEmpty(exam.Type))
         {
-            typeId =
-                (await this.connection.QueryAsync<int>(
-                    $"select exam_type_id from exam_type where title = '{prev.Type}';"))
-                .First();
+            prev.TypeId = context.ExamTypes.First(et => et.Title == exam.Type).ExamTypeId;
         }
 
         if (!string.IsNullOrEmpty(exam.StudentInitials) && !string.IsNullOrEmpty(exam.StudentGroup))
         {
-            studentId = (await this.connection.QueryAsync<int>(
-                $"""
-                 select student_id
-                 from student
-                 where last_name || ' ' || first_name || ' ' || middle_name = '{prev.StudentInitials}'
-                   and student_group = '{prev.StudentGroup}';
-                 """)).First();
+            prev.StudentId = context.Students.First(
+                s =>
+                    s.LastName + " " + s.FirstName + " " + s.MiddleName == exam.StudentInitials &&
+                    s.StudentGroup == exam.StudentGroup).StudentId;
         }
 
         if (!string.IsNullOrEmpty(exam.Classroom))
         {
-            locationId = (await this.connection.QueryAsync<int>(
-                $"select location_id from location where classroom = '{prev.Classroom}';")).First();
+            prev.LocationId = context.Locations.First(loc => loc.Classroom == exam.Classroom).LocationId;
         }
-
-        string commandText =
-            $"update exam set title = '{title}', type_id = {typeId}, student_id = {studentId}, " +
-            $"location_id = {locationId}, date_time = '{dateTime:yyyy-MM-dd hh:mm:ss}' where exam_id = {id};";
-        await this.connection.QueryAsync<Exam>(commandText);
 
         if (!exam.LecturersInitials.Any())
         {
+            await context.SaveChangesAsync();
             return Results.Ok();
         }
 
-        var lecturersIds = new List<string>();
-        foreach (var lecturerInitials in exam.LecturersInitials)
+        var lecturersIds = exam.LecturersInitials.Select(
+                lecturerInitials =>
+                    context.Lecturers
+                        .First(l => l.LastName + " " + l.FirstName + " " + l.MiddleName == lecturerInitials)
+                        .LecturerId)
+            .ToList();
+
+        var examLectures = context.ExamLecturers.Where(el => el.ExamId == id);
+        foreach (var el in examLectures)
         {
-            lecturersIds.Add((await this.connection.QueryAsync<string>(
-                $"""
-                 select lecturer_id
-                 from lecturer
-                 where last_name || ' ' || first_name || ' ' || middle_name = '{lecturerInitials}';
-                 """)).First());
+            context.Remove(el);
         }
 
-        await this.connection.QueryAsync<string>(
-            $"delete from exam_lecturer where exam_id = {id};");
         foreach (var lecturerId in lecturersIds)
         {
-            await this.connection.QueryAsync<string>(
-                $"insert into Exam_Lecturer(Exam_ID, Lecturer_ID) VALUES ({id}, {lecturerId});");
+            context.ExamLecturers.Add(
+                new ExamLecturer()
+                {
+                    ExamId = id,
+                    LecturerId = lecturerId,
+                });
         }
+
+        await context.SaveChangesAsync();
 
         return Results.Ok();
     }
@@ -190,8 +159,15 @@ public class ExamQueries : QueriesBase
     /// <returns>Response status.</returns>
     public async Task<IResult> DeleteExam(int examId)
     {
-        await this.connection.QueryAsync<Exam>($"delete from exam_lecturer where exam_id = {examId};");
-        await this.connection.QueryAsync<Exam>($"delete from Exam where exam_id = {examId};");
+        var exam = context.Exams.First(exam => exam.ExamId == examId);
+        var examLectures = context.ExamLecturers.Where(el => el.ExamId == examId);
+        context.Exams.Remove(exam);
+        foreach (var el in examLectures)
+        {
+            context.Remove(el);
+        }
+
+        await context.SaveChangesAsync();
         return Results.Ok();
     }
 }

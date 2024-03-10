@@ -4,24 +4,14 @@
 
 namespace ExamSchedule.Core.Queries;
 
-using Npgsql;
-using Dapper;
+using Microsoft.EntityFrameworkCore;
 using Models;
 
 /// <summary>
 /// Lecturer queries.
 /// </summary>
-public class LecturerQueries : QueriesBase
+public class LecturerQueries(ScheduleContext context)
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="LecturerQueries"/> class.
-    /// </summary>
-    /// <param name="connection">Instance of <see cref="NpgsqlConnection"/>.</param>
-    public LecturerQueries(NpgsqlConnection connection)
-        : base(connection)
-    {
-    }
-
     /// <summary>
     /// Gets lecturers.
     /// </summary>
@@ -29,14 +19,13 @@ public class LecturerQueries : QueriesBase
     /// <returns>List of lecturers.</returns>
     public async Task<IEnumerable<Lecturer>> GetLecturers(int? id = null)
     {
-        string commandText = """select * from lecturer""";
+        var result = await context.Lecturers.ToListAsync();
         if (id != null)
         {
-            commandText += $" where lecturer_id = {id}";
+            result = result.Where(lec => lec.LecturerId == id).ToList();
         }
 
-        var result = await this.connection.QueryAsync<Lecturer>(commandText);
-        return result.ToList();
+        return result;
     }
 
     /// <summary>
@@ -44,16 +33,23 @@ public class LecturerQueries : QueriesBase
     /// </summary>
     /// <param name="lec">Input lecturer.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> PostLecturer(InputLecturer lec)
+    public async Task<IResult> InsertLecturer(InputLecturer lec)
     {
         if (lec.Checksum == string.Empty || lec.Email == string.Empty)
         {
             return Results.BadRequest("Checksum and Email fields are required");
         }
 
-        await this.connection.QueryAsync<string>(
-            $"insert into lecturer(first_name, last_name, middle_name, email, checksum) " +
-            $"values ('{lec.FirstName}', '{lec.LastName}', '{lec.MiddleName}', '{lec.Email}', '{lec.Checksum}');");
+        var newLecturer = new Lecturer()
+        {
+            FirstName = lec.FirstName,
+            LastName = lec.LastName,
+            MiddleName = lec.MiddleName,
+            Email = lec.Email,
+            Checksum = lec.Checksum,
+        };
+        context.Lecturers.Add(newLecturer);
+        await context.SaveChangesAsync();
         return Results.Ok();
     }
 
@@ -67,16 +63,14 @@ public class LecturerQueries : QueriesBase
     {
         try
         {
-            var prev = this.GetLecturers(id).Result.First();
+            var prev = context.Lecturers.First(l => l.LecturerId == id);
 
-            var email = string.IsNullOrEmpty(lec.Email) ? prev.Email : lec.Email;
-            var checksum = string.IsNullOrEmpty(lec.Checksum) ? prev.Checksum : lec.Checksum;
-            var firstName = string.IsNullOrEmpty(lec.FirstName) ? prev.FirstName : lec.FirstName;
-            var lastName = string.IsNullOrEmpty(lec.LastName) ? prev.LastName : lec.LastName;
-            var middleName = string.IsNullOrEmpty(lec.MiddleName) ? prev.MiddleName : lec.MiddleName;
-            await this.connection.QueryAsync<string>(
-                $"update lecturer set email = '{email}', checksum = '{checksum}', first_name = '{firstName}'," +
-                $" last_name = '{lastName}', middle_name = '{middleName}' where lecturer_id = {id}");
+            prev.Email = string.IsNullOrEmpty(lec.Email) ? prev.Email : lec.Email;
+            prev.Checksum = string.IsNullOrEmpty(lec.Checksum) ? prev.Checksum : lec.Checksum;
+            prev.FirstName = string.IsNullOrEmpty(lec.FirstName) ? prev.FirstName : lec.FirstName;
+            prev.LastName = string.IsNullOrEmpty(lec.LastName) ? prev.LastName : lec.LastName;
+            prev.MiddleName = string.IsNullOrEmpty(lec.MiddleName) ? prev.MiddleName : lec.MiddleName;
+            await context.SaveChangesAsync();
             return Results.Ok();
         }
         catch (InvalidOperationException e)
@@ -92,8 +86,9 @@ public class LecturerQueries : QueriesBase
     /// <returns>Response status.</returns>
     public async Task<IResult> DeleteLecturer(int id)
     {
-        await this.connection.QueryAsync<string>(
-            $"delete from lecturer where lecturer_id = {id};");
+        var lecturer = context.Lecturers.First(lec => lec.LecturerId == id);
+        context.Lecturers.Remove(lecturer);
+        await context.SaveChangesAsync();
         return Results.Ok();
     }
 }

@@ -44,15 +44,9 @@ create table Employee
     CONSTRAINT Employee_PK PRIMARY KEY (Employee_ID)
 );
 
-create sequence exam_id_seq
-    start 1
-    increment 1
-    NO MAXVALUE
-    CACHE 1;
-
 create table Exam
 (
-    Exam_ID     int          not null,
+    Exam_ID     int          not null GENERATED ALWAYS AS IDENTITY,
     Title       varchar(100) not null,
     Type_ID     int          not null,
     Student_ID  int          not null,
@@ -66,6 +60,7 @@ create table Exam
 
 create table Exam_Lecturer
 (
+    ID          int not null GENERATED ALWAYS AS IDENTITY,
     Exam_ID     int not null,
     Lecturer_ID int not null,
     CONSTRAINT Exam_FK FOREIGN KEY (Exam_ID) REFERENCES Exam (Exam_ID),
@@ -84,12 +79,12 @@ VALUES ('Аноним', 'Анонимов', 'Анонимович', '22.Б22');
 insert into Lecturer(First_Name, Last_Name, Middle_Name, Email, Checksum)
 values ('Лектор', 'Лекторов', 'Лекторович', 'lektor@mail.ru', 'lektor');
 
-insert into Exam(Exam_ID, Title, Type_ID, Student_ID, Date_Time, Location_ID)
-values (nextval('exam_id_seq'), 'Экзамен', 0, 1, '2022-08-30 10:10:10', 0);
-insert into Exam(Exam_ID, Title, Type_ID, Student_ID, Date_Time, Location_ID)
-values (nextval('exam_id_seq'), 'Другой экзамен', 0, 1, '2022-10-30 10:10:10', 0);
-insert into Exam(Exam_ID, Title, Type_ID, Student_ID, Date_Time, Location_ID)
-values (nextval('exam_id_seq'), 'Еще один экзамен', 0, 1, '2024-12-30 10:10:10', 0);
+insert into Exam(Title, Type_ID, Student_ID, Date_Time, Location_ID)
+values ('Экзамен', 0, 1, '2022-08-30 10:10:10', 0);
+insert into Exam(Title, Type_ID, Student_ID, Date_Time, Location_ID)
+values ('Другой экзамен', 0, 1, '2022-10-30 10:10:10', 0);
+insert into Exam(Title, Type_ID, Student_ID, Date_Time, Location_ID)
+values ('Еще один экзамен', 0, 1, '2024-12-30 10:10:10', 0);
 
 
 insert into Exam_Lecturer(Exam_ID, Lecturer_ID)
