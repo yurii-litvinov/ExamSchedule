@@ -22,10 +22,7 @@ services:
     container_name: examschedule
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - HOST=db:5432
-      - USERNAME=postgres
-      - PASSWORD=postgres
-      - DATABASE=postgres
+      - ENVIRONMENT=Docker
     extra_hosts:
       - "host.docker.internal:host-gateway"
     build:
@@ -33,7 +30,7 @@ services:
     volumes:
       - './:/examschedule'
     ports:
-      - "5000:80"
+      - "5000:8080"
     depends_on:
       db:
         condition: service_healthy

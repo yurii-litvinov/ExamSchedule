@@ -17,10 +17,7 @@
       "applicationUrl": "http://localhost:5172",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "HOST": "localhost:5435",
-        "USERNAME": "postgres",
-        "PASSWORD": "postgres",
-        "DATABASE": "postgres"
+        "ENVIRONMENT": "Default"
       }
     },
     "https": {
@@ -31,10 +28,7 @@
       "applicationUrl": "https://localhost:7107;http://localhost:5172",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "HOST": "localhost:5435",
-        "USERNAME": "postgres",
-        "PASSWORD": "postgres",
-        "DATABASE": "postgres"
+        "ENVIRONMENT": "Default"
       }
     },
     "IIS Express": {

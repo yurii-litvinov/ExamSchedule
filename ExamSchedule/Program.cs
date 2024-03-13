@@ -8,9 +8,12 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Current environment
+var currentEnvironment = Environment.GetEnvironmentVariable("ENVIRONMENT") ?? "Default";
+
 // Register db context
 builder.Services.AddDbContext<ScheduleContext>(
-    opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+    opt => opt.UseNpgsql(builder.Configuration.GetConnectionString(currentEnvironment)));
 
 // Add services to the container.
 builder.Services.AddControllers().AddDataAnnotationsLocalization();
