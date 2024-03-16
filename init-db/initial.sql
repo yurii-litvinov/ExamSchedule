@@ -51,6 +51,7 @@ create table Exam
     Type_ID     int          not null,
     Student_ID  int          not null,
     Date_Time   timestamp    not null,
+    Is_Passed   bool         not null default false,
     Location_ID int          not null,
     CONSTRAINT Exam_PK PRIMARY KEY (Exam_ID),
     CONSTRAINT Type_FK FOREIGN KEY (Type_ID) REFERENCES Exam_Type (Exam_Type_ID),
