@@ -11,7 +11,7 @@ interface TableProps {
 
 
 export const ExamDisplayTable = ({data, selected, setSelected}: TableProps) => {
-    const headers = useMemo(() => ["", "Студент", "Дисциплина", "Группа", "Тип", "Место проведения", "Дата", "Преподаватели"], [])
+    const headers = useMemo(() => ["", "Id", "Студент", "Дисциплина", "Группа", "Тип", "Место проведения", "Дата", "Преподаватели"], [])
     const onCheckboxClick = (event: React.ChangeEvent<HTMLInputElement>, element: number) => {
         if (event.target.checked) {
             setSelected([element, ...selected])
@@ -34,9 +34,9 @@ export const ExamDisplayTable = ({data, selected, setSelected}: TableProps) => {
                     {data.map((row, rowIndex) =>
                         <TableRow key={rowIndex + '.row'}>
                             <TableCell key={rowIndex + ".box"} align={"center"}>
-                                <Checkbox onChange={event => onCheckboxClick(event, rowIndex)}/>
+                                <Checkbox onChange={event => onCheckboxClick(event, row.examId)}/>
                             </TableCell>
-                            {[row.student_initials, row.title, row.student_group, row.type, row.classroom,
+                            {[row.examId, row.student_initials, row.title, row.student_group, row.type, row.classroom,
                                 row.dateTime, row.lecturers.map(l => `${l.lastName} ${l.firstName} ${l.middleName}`).join(", ")]
                                 .map((cell, cellIndex) =>
                                     <TableCell key={rowIndex + "." + cellIndex} align={"center"}

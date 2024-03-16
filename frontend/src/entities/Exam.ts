@@ -6,6 +6,7 @@ export interface Exam {
     student_group: string;
     classroom: string;
     dateTime: string;
+    isPassed: boolean;
     lecturers: Lecturer[];
 }
 
