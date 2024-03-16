@@ -28,6 +28,7 @@ public class ExamQueries(ScheduleContext context)
                 Student_group = exam.Student.StudentGroup,
                 Type = exam.Type.Title,
                 exam.DateTime,
+                exam.IsPassed,
                 exam.Location.Classroom,
                 Lecturers = context.ExamLecturers.Where(el => el.ExamId == exam.ExamId).Select(el => el.Lecturer)
                     .ToList(),
@@ -71,6 +72,7 @@ public class ExamQueries(ScheduleContext context)
             StudentId = studentId,
             DateTime = exam.DateTime,
             LocationId = locationId,
+            IsPassed = false,
         };
         context.Exams.Add(newExam);
         foreach (var lecturerId in lecturersIds)
@@ -99,6 +101,7 @@ public class ExamQueries(ScheduleContext context)
         var prev = context.Exams.First(e => e.ExamId == id);
         prev.Title = string.IsNullOrEmpty(exam.Title) ? prev.Title : exam.Title;
         prev.DateTime = exam.DateTime == DateTime.MinValue ? prev.DateTime : exam.DateTime;
+        prev.IsPassed = exam.IsPassed;
 
         if (!string.IsNullOrEmpty(exam.Type))
         {

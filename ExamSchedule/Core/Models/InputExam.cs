@@ -40,6 +40,11 @@ public class InputExam
     public DateTime DateTime { get; set; } = DateTime.MinValue;
 
     /// <summary>
+    /// Gets or sets a value indicating whether exam is passed.
+    /// </summary>
+    public bool IsPassed { get; set; } = false;
+
+    /// <summary>
     /// Gets or sets lecturer.
     /// </summary>
     public IEnumerable<string> LecturersInitials { get; set; } = Array.Empty<string>();

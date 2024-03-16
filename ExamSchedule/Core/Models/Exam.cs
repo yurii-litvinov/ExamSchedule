@@ -52,6 +52,12 @@ public class Exam
     public DateTime DateTime { get; set; } = DateTime.MinValue;
 
     /// <summary>
+    /// Gets or sets a value indicating whether exam is passed.
+    /// </summary>
+    [Column("is_passed")]
+    public bool IsPassed { get; set; }
+
+    /// <summary>
     /// Gets or sets Location relation.
     /// </summary>
     public Location Location { get; set; } = null!;
