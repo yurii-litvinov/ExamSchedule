@@ -129,9 +129,10 @@ public class ScheduleParser
         spreadSheetStream.Seek(0, SeekOrigin.Begin);
 
         var uploadLinkResult =
-            await client.GetAsync("https://cloud-api.yandex.net/v1/disk/resources/upload?path=" +
-                                  path
-                                  + "&overwrite=true");
+            await client.GetAsync(
+                "https://cloud-api.yandex.net/v1/disk/resources/upload?path=" +
+                path
+                + "&overwrite=true");
         if (!uploadLinkResult.IsSuccessStatusCode)
         {
             return await uploadLinkResult.Content.ReadAsStringAsync();
@@ -148,6 +149,7 @@ public class ScheduleParser
         }
         catch (Exception ex)
         {
+            Console.WriteLine(ex);
             return $"An error occurred: {ex.Message}";
         }
     }
@@ -157,11 +159,12 @@ public class ScheduleParser
         var examCells = new List<string?>
             { row["Экзамен"].ToString(), row["Пересдача"].ToString(), row["Комиссия"].ToString() };
         var timeSpans = examCells.Where(s => !string.IsNullOrEmpty(s))
-            .Select(s =>
-                DateTime.ParseExact(
-                    string.Join(" ", s?.Split().Take(2).ToList() ?? new List<string>()),
-                    "dd.MM.yyyy HH:mm",
-                    System.Globalization.CultureInfo.InvariantCulture).Subtract(DateTime.Now)).ToList();
+            .Select(
+                s =>
+                    DateTime.ParseExact(
+                        string.Join(" ", s?.Split().Take(2).ToList() ?? new List<string>()),
+                        "dd.MM.yyyy HH:mm",
+                        System.Globalization.CultureInfo.InvariantCulture).Subtract(DateTime.Now)).ToList();
         if (timeSpans.Count == 0)
         {
             return TimeSpan.MaxValue;
@@ -195,8 +198,15 @@ public class ScheduleParser
             worksheetPart.Worksheet.Descendants<Row>(),
             workbookPart.SharedStringTablePart?.SharedStringTable);
 
-        var dataRows = this.dataTable.Select().OrderBy(SortingFunction).ToArray();
-        this.dataTable = dataRows.CopyToDataTable();
+        try
+        {
+            var dataRows = this.dataTable.Select().OrderBy(SortingFunction).ToArray();
+            this.dataTable = dataRows.CopyToDataTable();
+        }
+        catch (FormatException exception)
+        {
+            return "An error occurred: " + exception.Message;
+        }
 
         var sheetData = new SheetData();
         worksheetPart.Worksheet = new Worksheet(sheetData);
@@ -267,7 +277,7 @@ public class ScheduleParser
 
                 var value = cell.CellValue.InnerXml;
 
-                if (cell.DataType is { Value: CellValues.SharedString } && sharedStringTable != null)
+                if (cell.DataType != null && cell.DataType == CellValues.SharedString && sharedStringTable != null)
                 {
                     tempRow[i] = sharedStringTable.ChildElements[int.Parse(value)].InnerText;
                 }
@@ -277,10 +287,11 @@ public class ScheduleParser
                 }
             }
 
-            if (tempRow.Field<string>(0) == string.Empty || this.dataTable.AsEnumerable().Any(r =>
-                    r.Field<string?>("Студент") == tempRow.Field<string>(0) &&
-                    r.Field<string>("Дисциплина") == tempRow.Field<string>(1) &&
-                    r.Field<string>("Группа") == tempRow.Field<string>(2)))
+            if (tempRow.Field<string>(0) == string.Empty || this.dataTable.AsEnumerable().Any(
+                    r =>
+                        r.Field<string?>("Студент") == tempRow.Field<string>(0) &&
+                        r.Field<string>("Дисциплина") == tempRow.Field<string>(1) &&
+                        r.Field<string>("Группа") == tempRow.Field<string>(2)))
             {
                 continue;
             }
