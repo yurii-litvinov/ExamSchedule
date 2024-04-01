@@ -2,36 +2,34 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-string? token = null;
-while (token == null)
+var pathToTable = args[0];
+if (!File.Exists(pathToTable))
 {
-    Console.WriteLine(
-        "Введите токен (можно получить тут https://oauth.yandex.ru/authorize?response_type=token&client_id=2076405a93374428b3f436c290b3663a):");
-    token = Console.ReadLine();
-}
-
-string? pathToTable = null;
-while (pathToTable == null)
-{
-    Console.WriteLine("Файл таблицы в браузере должен быть закрыт!");
-    Console.WriteLine("Введите путь до таблицы на Диске (например, /ExamSchedule.xlsx):");
-    pathToTable = Console.ReadLine();
+    Console.WriteLine("Неверный путь до таблицы");
+    return;
 }
 
 string? pathToFile = null;
-while (true)
+if (args.Length > 1)
 {
-    while (pathToFile == null)
+    pathToFile = args[1];
+    if (!File.Exists(pathToFile))
     {
-        Console.WriteLine("Введите абсолютный путь до файла индивидуального графика:");
-        pathToFile = Console.ReadLine();
+        Console.WriteLine("Неверный путь до файла индивидуального графика");
+        return;
     }
+}
 
-    var fileStream = new FileStream(pathToFile, FileMode.Open);
-    var result = await new ScheduleParser.ScheduleParser(fileStream).ParseToTable(token, pathToTable);
-    Console.ForegroundColor = result == "File uploaded successfully." ? ConsoleColor.Green : ConsoleColor.Red;
+try
+{
+    await using var fileStream = pathToFile != null ? new FileStream(pathToFile, FileMode.Open) : null;
+    await using var spreadSheetStream = new FileStream(pathToTable, FileMode.Open);
+    var result = await new ScheduleParser.ScheduleParser(fileStream).ParseToTable(spreadSheetStream);
+    Console.ForegroundColor = result == "Successfully" ? ConsoleColor.Green : ConsoleColor.Red;
     Console.WriteLine($"\n=====   {result}   =====\n");
-    fileStream.Close();
     Console.ResetColor();
-    pathToFile = null;
+}
+catch (FileNotFoundException e)
+{
+    Console.WriteLine(e.Message);
 }

@@ -91,67 +91,21 @@ public class ScheduleParser
     }
 
     /// <summary>
-    /// Download table from <a href="https://disk.yandex.ru">Yandex.Disk</a>,
-    /// update it with values from <see cref="DataTable"/> and upload back.
+    /// Open Excel table,
+    /// update it with values from <see cref="DataTable"/> and save.
     /// </summary>
-    /// <param name="token">OAuth token.</param>
-    /// <param name="path">Path to table from the root of <a href="https://disk.yandex.ru">Yandex.Disk</a>.</param>
+    /// <param name="spreadSheetStream">Excel file stream.</param>
     /// <returns>Result message.</returns>
-    public async Task<string> ParseToTable(string token, string path)
+    public Task<string> ParseToTable(Stream spreadSheetStream)
     {
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("Authorization", "OAuth " + token);
-        var downloadLinkResult =
-            await client.GetAsync("https://cloud-api.yandex.net/v1/disk/resources/download?path=" + path);
-        if (!downloadLinkResult.IsSuccessStatusCode)
-        {
-            return await downloadLinkResult.Content.ReadAsStringAsync();
-        }
-
-        var downloadResponse = await downloadLinkResult.Content.ReadAsAsync<SpreadsheetLoadResponse>();
-        if (downloadResponse.Href == null)
-        {
-            return "Error handled on getting download link";
-        }
-
-        using var spreadSheetStream = new MemoryStream();
-        await using (var downloadedStream = await client.GetStreamAsync(downloadResponse.Href))
-        {
-            await downloadedStream.CopyToAsync(spreadSheetStream);
-        }
-
         var fillingMessage = this.FillSpreadSheet(spreadSheetStream);
         if (fillingMessage != null)
         {
-            return fillingMessage;
+            return Task.FromResult(fillingMessage);
         }
 
         spreadSheetStream.Seek(0, SeekOrigin.Begin);
-
-        var uploadLinkResult =
-            await client.GetAsync(
-                "https://cloud-api.yandex.net/v1/disk/resources/upload?path=" +
-                path
-                + "&overwrite=true");
-        if (!uploadLinkResult.IsSuccessStatusCode)
-        {
-            return await uploadLinkResult.Content.ReadAsStringAsync();
-        }
-
-        var uploadResponse = await uploadLinkResult.Content.ReadAsAsync<SpreadsheetLoadResponse>();
-        try
-        {
-            using StreamContent streamContent = new StreamContent(spreadSheetStream);
-            using HttpResponseMessage response = await client.PutAsync(uploadResponse.Href, streamContent);
-            return response.IsSuccessStatusCode
-                ? "File uploaded successfully."
-                : $"Error: {response.StatusCode} - {response.ReasonPhrase}";
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex);
-            return $"An error occurred: {ex.Message}";
-        }
+        return Task.FromResult("Successfully");
     }
 
     private static TimeSpan SortingFunction(DataRow row)
@@ -217,14 +171,17 @@ public class ScheduleParser
         foreach (DataColumn column in this.dataTable.Columns)
         {
             columns.Add(column.ColumnName);
-            var cell = new Cell();
             var run1 = new DocumentFormat.OpenXml.Spreadsheet.Run();
             run1.Append(new DocumentFormat.OpenXml.Spreadsheet.Text(column.ColumnName));
             var run1Properties = new DocumentFormat.OpenXml.Spreadsheet.RunProperties();
             run1Properties.Append(new DocumentFormat.OpenXml.Spreadsheet.Bold());
             run1.RunProperties = run1Properties;
-            var inlineString = new InlineString(run1);
-            cell.Append(inlineString);
+            var cell = new Cell
+            {
+                DataType = CellValues.InlineString,
+                InlineString = new InlineString(run1),
+            };
+
             headerRow.AppendChild(cell);
         }
 

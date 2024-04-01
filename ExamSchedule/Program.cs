@@ -13,11 +13,14 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.MapPut("api/update_table", (string token, IFormFile? formFile, string filePath) =>
-{
-    var task = new ScheduleParser.ScheduleParser(formFile?.OpenReadStream()).ParseToTable(token, filePath);
-    return task.Result;
-});
+app.MapPut(
+    "api/update_table",
+    (IFormFile? formFile, IFormFile tableFile) =>
+    {
+        var task = new ScheduleParser.ScheduleParser(formFile?.OpenReadStream()).ParseToTable(
+            tableFile.OpenReadStream());
+        return task.Result;
+    });
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
