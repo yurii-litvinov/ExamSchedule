@@ -56,7 +56,7 @@ public class ExamQueries(ScheduleContext context)
                 lecturerInitials =>
                     context.Lecturers
                         .First(
-                            lecturer => $"{lecturer.LastName} {lecturer.FirstName} {lecturer.MiddleName}" ==
+                            lecturer => lecturer.LastName + " " + lecturer.FirstName + " " + lecturer.MiddleName ==
                                         lecturerInitials)
                         .LecturerId)
             .ToList();
@@ -64,7 +64,7 @@ public class ExamQueries(ScheduleContext context)
         var typeId = context.ExamTypes.First(examType => examType.Title == inputExam.Type).ExamTypeId;
         var studentId = context.Students.First(
             student =>
-                $"{student.LastName} {student.FirstName} {student.MiddleName}" == inputExam.StudentInitials &&
+                student.LastName + " " + student.FirstName + " " + student.MiddleName == inputExam.StudentInitials &&
                 student.StudentGroup == inputExam.StudentGroup).StudentId;
         var locationId = context.Locations.First(location => location.Classroom == inputExam.Classroom).LocationId;
 
@@ -115,7 +115,8 @@ public class ExamQueries(ScheduleContext context)
         {
             prev.StudentId = context.Students.First(
                 student =>
-                    $"{student.LastName} {student.FirstName} {student.MiddleName}" == inputExam.StudentInitials &&
+                    student.LastName + " " + student.FirstName + " " + student.MiddleName ==
+                    inputExam.StudentInitials &&
                     student.StudentGroup == inputExam.StudentGroup).StudentId;
         }
 
@@ -134,7 +135,7 @@ public class ExamQueries(ScheduleContext context)
                 lecturerInitials =>
                     context.Lecturers
                         .First(
-                            lecturer => $"{lecturer.LastName} {lecturer.FirstName} {lecturer.MiddleName}" ==
+                            lecturer => lecturer.LastName + " " + lecturer.FirstName + " " + lecturer.MiddleName ==
                                         lecturerInitials)
                         .LecturerId)
             .ToList();
