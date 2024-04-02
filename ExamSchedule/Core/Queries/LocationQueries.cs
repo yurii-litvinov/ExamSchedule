@@ -4,8 +4,8 @@
 
 namespace ExamSchedule.Core.Queries;
 
+using ExamSchedule.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using Models;
 
 /// <summary>
 /// Location queries.
@@ -19,13 +19,13 @@ public class LocationQueries(ScheduleContext context)
     /// <returns>List of locations.</returns>
     public async Task<IEnumerable<Location>> GetLocations(int? id = null)
     {
-        var result = await context.Locations.ToListAsync();
+        var result = context.Locations.AsQueryable();
         if (id != null)
         {
-            result = result.Where(loc => loc.LocationId == id).ToList();
+            result = result.Where(location => location.LocationId == id);
         }
 
-        return result;
+        return await result.ToListAsync();
     }
 
     /// <summary>
@@ -44,21 +44,21 @@ public class LocationQueries(ScheduleContext context)
     /// Updates location.
     /// </summary>
     /// <param name="id">Location id.</param>
-    /// <param name="location">Input location.</param>
+    /// <param name="inputLocation">Input location.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> UpdateLocation(int id, InputLocation location)
+    public async Task<IResult> UpdateLocation(int id, InputLocation inputLocation)
     {
         try
         {
             var prev = this.GetLocations(id).Result.First();
 
-            prev.Classroom = string.IsNullOrEmpty(prev.Classroom) ? prev.Classroom : location.Classroom;
+            prev.Classroom = string.IsNullOrEmpty(prev.Classroom) ? prev.Classroom : inputLocation.Classroom;
             await context.SaveChangesAsync();
             return Results.Ok();
         }
-        catch (InvalidOperationException e)
+        catch (InvalidOperationException exception)
         {
-            return Results.BadRequest(e);
+            return Results.BadRequest(exception);
         }
     }
 
@@ -69,8 +69,8 @@ public class LocationQueries(ScheduleContext context)
     /// <returns>Response status.</returns>
     public async Task<IResult> DeleteLocation(int id)
     {
-        var location = context.Locations.First(loc => loc.LocationId == id);
-        context.Locations.Remove(location);
+        var deletedLocation = context.Locations.First(location => location.LocationId == id);
+        context.Locations.Remove(deletedLocation);
         await context.SaveChangesAsync();
         return Results.Ok();
     }

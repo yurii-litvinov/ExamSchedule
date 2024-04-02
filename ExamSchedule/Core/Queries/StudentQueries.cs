@@ -4,8 +4,8 @@
 
 namespace ExamSchedule.Core.Queries;
 
+using ExamSchedule.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using Models;
 
 /// <summary>
 /// Student queries.
@@ -19,28 +19,28 @@ public class StudentQueries(ScheduleContext context)
     /// <returns>List of students.</returns>
     public async Task<IEnumerable<Student>> GetStudents(int? id = null)
     {
-        var result = await context.Students.ToListAsync();
+        var result = context.Students.AsQueryable();
         if (id != null)
         {
-            result = result.Where(st => st.StudentId == id).ToList();
+            result = result.Where(student => student.StudentId == id);
         }
 
-        return result;
+        return await result.ToListAsync();
     }
 
     /// <summary>
     /// Inserts new student.
     /// </summary>
-    /// <param name="st">Input student.</param>
+    /// <param name="inputStudent">Input student.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> InsertStudent(InputStudent st)
+    public async Task<IResult> InsertStudent(InputStudent inputStudent)
     {
         var student = new Student()
         {
-            FirstName = st.FirstName,
-            LastName = st.LastName,
-            MiddleName = st.MiddleName,
-            StudentGroup = st.StudentGroup,
+            FirstName = inputStudent.FirstName,
+            LastName = inputStudent.LastName,
+            MiddleName = inputStudent.MiddleName,
+            StudentGroup = inputStudent.StudentGroup,
         };
         context.Students.Add(student);
         await context.SaveChangesAsync();
@@ -51,24 +51,26 @@ public class StudentQueries(ScheduleContext context)
     /// Updates student.
     /// </summary>
     /// <param name="id">Student id.</param>
-    /// <param name="st">Input student.</param>
+    /// <param name="inputStudent">Input student.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> UpdateStudent(int id, InputStudent st)
+    public async Task<IResult> UpdateStudent(int id, InputStudent inputStudent)
     {
         try
         {
-            var prev = context.Students.First(s => s.StudentId == id);
+            var prev = context.Students.First(student => student.StudentId == id);
 
-            prev.StudentGroup = string.IsNullOrEmpty(st.StudentGroup) ? prev.StudentGroup : st.StudentGroup;
-            prev.FirstName = string.IsNullOrEmpty(st.FirstName) ? prev.FirstName : st.FirstName;
-            prev.LastName = string.IsNullOrEmpty(st.LastName) ? prev.LastName : st.LastName;
-            prev.MiddleName = string.IsNullOrEmpty(st.MiddleName) ? prev.MiddleName : st.MiddleName;
+            prev.StudentGroup = string.IsNullOrEmpty(inputStudent.StudentGroup)
+                ? prev.StudentGroup
+                : inputStudent.StudentGroup;
+            prev.FirstName = string.IsNullOrEmpty(inputStudent.FirstName) ? prev.FirstName : inputStudent.FirstName;
+            prev.LastName = string.IsNullOrEmpty(inputStudent.LastName) ? prev.LastName : inputStudent.LastName;
+            prev.MiddleName = string.IsNullOrEmpty(inputStudent.MiddleName) ? prev.MiddleName : inputStudent.MiddleName;
             await context.SaveChangesAsync();
             return Results.Ok();
         }
-        catch (InvalidOperationException e)
+        catch (InvalidOperationException exception)
         {
-            return Results.BadRequest(e);
+            return Results.BadRequest(exception);
         }
     }
 
@@ -79,8 +81,8 @@ public class StudentQueries(ScheduleContext context)
     /// <returns>Response status.</returns>
     public async Task<IResult> DeleteStudent(int id)
     {
-        var student = context.Students.First(st => st.StudentId == id);
-        context.Students.Remove(student);
+        var deletedStudent = context.Students.First(student => student.StudentId == id);
+        context.Students.Remove(deletedStudent);
         await context.SaveChangesAsync();
         return Results.Ok();
     }

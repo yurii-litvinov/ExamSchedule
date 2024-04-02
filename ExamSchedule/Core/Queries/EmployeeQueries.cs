@@ -4,8 +4,8 @@
 
 namespace ExamSchedule.Core.Queries;
 
+using ExamSchedule.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using Models;
 
 /// <summary>
 /// Employee queries.
@@ -19,34 +19,34 @@ public class EmployeeQueries(ScheduleContext context)
     /// <returns>List of employees.</returns>
     public async Task<IEnumerable<Employee>> GetEmployees(int? id = null)
     {
-        var result = await context.Employees.ToListAsync();
+        var result = context.Employees.AsQueryable();
         if (id != null)
         {
-            result = result.Where(e => e.EmployeeId == id).ToList();
+            result = result.Where(employee => employee.EmployeeId == id);
         }
 
-        return result;
+        return await result.ToListAsync();
     }
 
     /// <summary>
     /// Inserts new Employee.
     /// </summary>
-    /// <param name="emp">Input employee.</param>
+    /// <param name="employee">Input employee.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> InsertEmployee(InputEmployee emp)
+    public async Task<IResult> InsertEmployee(InputEmployee employee)
     {
-        if (emp.Checksum == string.Empty || emp.Email == string.Empty)
+        if (employee.Checksum == string.Empty || employee.Email == string.Empty)
         {
             return Results.BadRequest("Checksum and Email fields are required");
         }
 
         var newEmployee = new Employee()
         {
-            FirstName = emp.FirstName,
-            LastName = emp.LastName,
-            MiddleName = emp.MiddleName,
-            Email = emp.Email,
-            Checksum = emp.Checksum,
+            FirstName = employee.FirstName,
+            LastName = employee.LastName,
+            MiddleName = employee.MiddleName,
+            Email = employee.Email,
+            Checksum = employee.Checksum,
         };
         context.Employees.Add(newEmployee);
         await context.SaveChangesAsync();
@@ -57,25 +57,27 @@ public class EmployeeQueries(ScheduleContext context)
     /// Update employee.
     /// </summary>
     /// <param name="id"> Employee id.</param>
-    /// <param name="emp">Input employee.</param>
+    /// <param name="inputEmployee">Input employee.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> UpdateEmployee(int id, InputEmployee emp)
+    public async Task<IResult> UpdateEmployee(int id, InputEmployee inputEmployee)
     {
         try
         {
-            var prev = context.Employees.First(e => e.EmployeeId == id);
+            var prev = context.Employees.First(employee => employee.EmployeeId == id);
 
-            prev.Email = string.IsNullOrEmpty(emp.Email) ? prev.Email : emp.Email;
-            prev.Checksum = string.IsNullOrEmpty(emp.Checksum) ? prev.Checksum : emp.Checksum;
-            prev.FirstName = string.IsNullOrEmpty(emp.FirstName) ? prev.FirstName : emp.FirstName;
-            prev.LastName = string.IsNullOrEmpty(emp.LastName) ? prev.LastName : emp.LastName;
-            prev.MiddleName = string.IsNullOrEmpty(emp.MiddleName) ? prev.MiddleName : emp.MiddleName;
+            prev.Email = string.IsNullOrEmpty(inputEmployee.Email) ? prev.Email : inputEmployee.Email;
+            prev.Checksum = string.IsNullOrEmpty(inputEmployee.Checksum) ? prev.Checksum : inputEmployee.Checksum;
+            prev.FirstName = string.IsNullOrEmpty(inputEmployee.FirstName) ? prev.FirstName : inputEmployee.FirstName;
+            prev.LastName = string.IsNullOrEmpty(inputEmployee.LastName) ? prev.LastName : inputEmployee.LastName;
+            prev.MiddleName = string.IsNullOrEmpty(inputEmployee.MiddleName)
+                ? prev.MiddleName
+                : inputEmployee.MiddleName;
             await context.SaveChangesAsync();
             return Results.Ok();
         }
-        catch (InvalidOperationException e)
+        catch (InvalidOperationException exception)
         {
-            return Results.BadRequest(e);
+            return Results.BadRequest(exception);
         }
     }
 
@@ -86,8 +88,8 @@ public class EmployeeQueries(ScheduleContext context)
     /// <returns>Response status.</returns>
     public async Task<IResult> DeleteEmployee(int id)
     {
-        var employee = context.Employees.First(e => e.EmployeeId == id);
-        context.Employees.Remove(employee);
+        var deletedEmployee = context.Employees.First(employee => employee.EmployeeId == id);
+        context.Employees.Remove(deletedEmployee);
         await context.SaveChangesAsync();
         return Results.Ok();
     }
