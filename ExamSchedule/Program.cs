@@ -44,9 +44,10 @@ app.UseCors("CorsPolicy");
 
 app.MapPut(
     "api/update_table",
-    (string token, IFormFile? formFile, string filePath) =>
+    (IFormFile? formFile, IFormFile tableFile) =>
     {
-        var task = new ScheduleParser.ScheduleParser(formFile?.OpenReadStream()).ParseToTable(token, filePath);
+        var task = new ScheduleParser.ScheduleParser(formFile?.OpenReadStream()).ParseToTable(
+            tableFile.OpenReadStream());
         return task.Result;
     });
 

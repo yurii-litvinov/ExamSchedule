@@ -91,65 +91,21 @@ public class ScheduleParser
     }
 
     /// <summary>
-    /// Download table from <a href="https://disk.yandex.ru">Yandex.Disk</a>,
-    /// update it with values from <see cref="DataTable"/> and upload back.
+    /// Open Excel table,
+    /// update it with values from <see cref="DataTable"/> and save.
     /// </summary>
-    /// <param name="token">OAuth token.</param>
-    /// <param name="path">Path to table from the root of <a href="https://disk.yandex.ru">Yandex.Disk</a>.</param>
+    /// <param name="spreadSheetStream">Excel file stream.</param>
     /// <returns>Result message.</returns>
-    public async Task<string> ParseToTable(string token, string path)
+    public Task<string> ParseToTable(Stream spreadSheetStream)
     {
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("Authorization", "OAuth " + token);
-        var downloadLinkResult =
-            await client.GetAsync("https://cloud-api.yandex.net/v1/disk/resources/download?path=" + path);
-        if (!downloadLinkResult.IsSuccessStatusCode)
-        {
-            return await downloadLinkResult.Content.ReadAsStringAsync();
-        }
-
-        var downloadResponse = await downloadLinkResult.Content.ReadAsAsync<SpreadsheetLoadResponse>();
-        if (downloadResponse.Href == null)
-        {
-            return "Error handled on getting download link";
-        }
-
-        using var spreadSheetStream = new MemoryStream();
-        await using (var downloadedStream = await client.GetStreamAsync(downloadResponse.Href))
-        {
-            await downloadedStream.CopyToAsync(spreadSheetStream);
-        }
-
         var fillingMessage = this.FillSpreadSheet(spreadSheetStream);
         if (fillingMessage != null)
         {
-            return fillingMessage;
+            return Task.FromResult(fillingMessage);
         }
 
         spreadSheetStream.Seek(0, SeekOrigin.Begin);
-
-        var uploadLinkResult =
-            await client.GetAsync("https://cloud-api.yandex.net/v1/disk/resources/upload?path=" +
-                                  path
-                                  + "&overwrite=true");
-        if (!uploadLinkResult.IsSuccessStatusCode)
-        {
-            return await uploadLinkResult.Content.ReadAsStringAsync();
-        }
-
-        var uploadResponse = await uploadLinkResult.Content.ReadAsAsync<SpreadsheetLoadResponse>();
-        try
-        {
-            using StreamContent streamContent = new StreamContent(spreadSheetStream);
-            using HttpResponseMessage response = await client.PutAsync(uploadResponse.Href, streamContent);
-            return response.IsSuccessStatusCode
-                ? "File uploaded successfully."
-                : $"Error: {response.StatusCode} - {response.ReasonPhrase}";
-        }
-        catch (Exception ex)
-        {
-            return $"An error occurred: {ex.Message}";
-        }
+        return Task.FromResult("Successfully");
     }
 
     private static TimeSpan SortingFunction(DataRow row)
@@ -157,11 +113,12 @@ public class ScheduleParser
         var examCells = new List<string?>
             { row["Экзамен"].ToString(), row["Пересдача"].ToString(), row["Комиссия"].ToString() };
         var timeSpans = examCells.Where(s => !string.IsNullOrEmpty(s))
-            .Select(s =>
-                DateTime.ParseExact(
-                    string.Join(" ", s?.Split().Take(2).ToList() ?? new List<string>()),
-                    "dd.MM.yyyy HH:mm",
-                    System.Globalization.CultureInfo.InvariantCulture).Subtract(DateTime.Now)).ToList();
+            .Select(
+                s =>
+                    DateTime.ParseExact(
+                        string.Join(" ", s?.Split().Take(2).ToList() ?? new List<string>()),
+                        "dd.MM.yyyy HH:mm",
+                        System.Globalization.CultureInfo.InvariantCulture).Subtract(DateTime.Now)).ToList();
         if (timeSpans.Count == 0)
         {
             return TimeSpan.MaxValue;
@@ -195,8 +152,15 @@ public class ScheduleParser
             worksheetPart.Worksheet.Descendants<Row>(),
             workbookPart.SharedStringTablePart?.SharedStringTable);
 
-        var dataRows = this.dataTable.Select().OrderBy(SortingFunction).ToArray();
-        this.dataTable = dataRows.CopyToDataTable();
+        try
+        {
+            var dataRows = this.dataTable.Select().OrderBy(SortingFunction).ToArray();
+            this.dataTable = dataRows.CopyToDataTable();
+        }
+        catch (FormatException exception)
+        {
+            return "An error occurred: " + exception.Message;
+        }
 
         var sheetData = new SheetData();
         worksheetPart.Worksheet = new Worksheet(sheetData);
@@ -207,14 +171,17 @@ public class ScheduleParser
         foreach (DataColumn column in this.dataTable.Columns)
         {
             columns.Add(column.ColumnName);
-            var cell = new Cell();
             var run1 = new DocumentFormat.OpenXml.Spreadsheet.Run();
             run1.Append(new DocumentFormat.OpenXml.Spreadsheet.Text(column.ColumnName));
             var run1Properties = new DocumentFormat.OpenXml.Spreadsheet.RunProperties();
             run1Properties.Append(new DocumentFormat.OpenXml.Spreadsheet.Bold());
             run1.RunProperties = run1Properties;
-            var inlineString = new InlineString(run1);
-            cell.Append(inlineString);
+            var cell = new Cell
+            {
+                DataType = CellValues.InlineString,
+                InlineString = new InlineString(run1),
+            };
+
             headerRow.AppendChild(cell);
         }
 
@@ -267,7 +234,7 @@ public class ScheduleParser
 
                 var value = cell.CellValue.InnerXml;
 
-                if (cell.DataType is { Value: CellValues.SharedString } && sharedStringTable != null)
+                if (cell.DataType != null && cell.DataType == CellValues.SharedString && sharedStringTable != null)
                 {
                     tempRow[i] = sharedStringTable.ChildElements[int.Parse(value)].InnerText;
                 }
@@ -277,10 +244,11 @@ public class ScheduleParser
                 }
             }
 
-            if (tempRow.Field<string>(0) == string.Empty || this.dataTable.AsEnumerable().Any(r =>
-                    r.Field<string?>("Студент") == tempRow.Field<string>(0) &&
-                    r.Field<string>("Дисциплина") == tempRow.Field<string>(1) &&
-                    r.Field<string>("Группа") == tempRow.Field<string>(2)))
+            if (tempRow.Field<string>(0) == string.Empty || this.dataTable.AsEnumerable().Any(
+                    r =>
+                        r.Field<string?>("Студент") == tempRow.Field<string>(0) &&
+                        r.Field<string>("Дисциплина") == tempRow.Field<string>(1) &&
+                        r.Field<string>("Группа") == tempRow.Field<string>(2)))
             {
                 continue;
             }
