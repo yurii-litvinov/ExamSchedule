@@ -4,8 +4,8 @@
 
 namespace ExamSchedule.Core.Queries;
 
+using ExamSchedule.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using Models;
 
 /// <summary>
 /// Exam queries.
@@ -19,58 +19,61 @@ public class ExamQueries(ScheduleContext context)
     /// <returns>List of exams.</returns>
     public async Task<IEnumerable<object>> GetExams(int? id = null)
     {
-        var result = await (from exam in context.Exams
+        var result = from exam in context.Exams
             select new
             {
                 exam.ExamId,
-                Student_initials = exam.Student.FirstName + ' ' + exam.Student.LastName,
+                Student_initials = $"{exam.Student.FirstName} {exam.Student.LastName}",
                 exam.Title,
                 Student_group = exam.Student.StudentGroup,
                 Type = exam.Type.Title,
                 exam.DateTime,
                 exam.IsPassed,
                 exam.Location.Classroom,
-                Lecturers = context.ExamLecturers.Where(el => el.ExamId == exam.ExamId).Select(el => el.Lecturer)
+                Lecturers = context.ExamLecturers.Where(examLecturer => examLecturer.ExamId == exam.ExamId)
+                    .Select(examLecturer => examLecturer.Lecturer)
                     .ToList(),
                 exam.TypeId,
                 exam.StudentId,
                 exam.LocationId,
-            }).ToListAsync();
+            };
         if (id != null)
         {
-            result = result.Where(e => e.ExamId == id).ToList();
+            result = result.Where(exam => exam.ExamId == id);
         }
 
-        return result;
+        return await result.ToListAsync();
     }
 
     /// <summary>
     /// Inserts new exam.
     /// </summary>
-    /// <param name="exam">Input exam.</param>
+    /// <param name="inputExam">Input exam.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> InsertExam(InputExam exam)
+    public async Task<IResult> InsertExam(InputExam inputExam)
     {
-        var lecturersIds = exam.LecturersInitials.Select(
+        var lecturersIds = inputExam.LecturersInitials.Select(
                 lecturerInitials =>
                     context.Lecturers
-                        .First(l => l.LastName + " " + l.FirstName + " " + l.MiddleName == lecturerInitials)
+                        .First(
+                            lecturer => lecturer.LastName + " " + lecturer.FirstName + " " + lecturer.MiddleName ==
+                                        lecturerInitials)
                         .LecturerId)
             .ToList();
 
-        var typeId = context.ExamTypes.First(et => et.Title == exam.Type).ExamTypeId;
+        var typeId = context.ExamTypes.First(examType => examType.Title == inputExam.Type).ExamTypeId;
         var studentId = context.Students.First(
-            s =>
-                s.LastName + " " + s.FirstName + " " + s.MiddleName == exam.StudentInitials &&
-                s.StudentGroup == exam.StudentGroup).StudentId;
-        var locationId = context.Locations.First(loc => loc.Classroom == exam.Classroom).LocationId;
+            student =>
+                student.LastName + " " + student.FirstName + " " + student.MiddleName == inputExam.StudentInitials &&
+                student.StudentGroup == inputExam.StudentGroup).StudentId;
+        var locationId = context.Locations.First(location => location.Classroom == inputExam.Classroom).LocationId;
 
         var newExam = new Exam()
         {
-            Title = exam.Title,
+            Title = inputExam.Title,
             TypeId = typeId,
             StudentId = studentId,
-            DateTime = exam.DateTime,
+            DateTime = inputExam.DateTime,
             LocationId = locationId,
             IsPassed = false,
         };
@@ -94,50 +97,53 @@ public class ExamQueries(ScheduleContext context)
     /// Updates exam.
     /// </summary>
     /// <param name="id">Exam id.</param>
-    /// <param name="exam">Input exam.</param>
+    /// <param name="inputExam">Input exam.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> UpdateExam(int id, InputExam exam)
+    public async Task<IResult> UpdateExam(int id, InputExam inputExam)
     {
-        var prev = context.Exams.First(e => e.ExamId == id);
-        prev.Title = string.IsNullOrEmpty(exam.Title) ? prev.Title : exam.Title;
-        prev.DateTime = exam.DateTime == DateTime.MinValue ? prev.DateTime : exam.DateTime;
-        prev.IsPassed = exam.IsPassed;
+        var prev = context.Exams.First(exam => exam.ExamId == id);
+        prev.Title = string.IsNullOrEmpty(inputExam.Title) ? prev.Title : inputExam.Title;
+        prev.DateTime = inputExam.DateTime == DateTime.MinValue ? prev.DateTime : inputExam.DateTime;
+        prev.IsPassed = inputExam.IsPassed;
 
-        if (!string.IsNullOrEmpty(exam.Type))
+        if (!string.IsNullOrEmpty(inputExam.Type))
         {
-            prev.TypeId = context.ExamTypes.First(et => et.Title == exam.Type).ExamTypeId;
+            prev.TypeId = context.ExamTypes.First(examType => examType.Title == inputExam.Type).ExamTypeId;
         }
 
-        if (!string.IsNullOrEmpty(exam.StudentInitials) && !string.IsNullOrEmpty(exam.StudentGroup))
+        if (!string.IsNullOrEmpty(inputExam.StudentInitials) && !string.IsNullOrEmpty(inputExam.StudentGroup))
         {
             prev.StudentId = context.Students.First(
-                s =>
-                    s.LastName + " " + s.FirstName + " " + s.MiddleName == exam.StudentInitials &&
-                    s.StudentGroup == exam.StudentGroup).StudentId;
+                student =>
+                    student.LastName + " " + student.FirstName + " " + student.MiddleName ==
+                    inputExam.StudentInitials &&
+                    student.StudentGroup == inputExam.StudentGroup).StudentId;
         }
 
-        if (!string.IsNullOrEmpty(exam.Classroom))
+        if (!string.IsNullOrEmpty(inputExam.Classroom))
         {
-            prev.LocationId = context.Locations.First(loc => loc.Classroom == exam.Classroom).LocationId;
+            prev.LocationId = context.Locations.First(location => location.Classroom == inputExam.Classroom).LocationId;
         }
 
-        if (!exam.LecturersInitials.Any())
+        if (!inputExam.LecturersInitials.Any())
         {
             await context.SaveChangesAsync();
             return Results.Ok();
         }
 
-        var lecturersIds = exam.LecturersInitials.Select(
+        var lecturersIds = inputExam.LecturersInitials.Select(
                 lecturerInitials =>
                     context.Lecturers
-                        .First(l => l.LastName + " " + l.FirstName + " " + l.MiddleName == lecturerInitials)
+                        .First(
+                            lecturer => lecturer.LastName + " " + lecturer.FirstName + " " + lecturer.MiddleName ==
+                                        lecturerInitials)
                         .LecturerId)
             .ToList();
 
-        var examLectures = context.ExamLecturers.Where(el => el.ExamId == id);
-        foreach (var el in examLectures)
+        var examLectures = context.ExamLecturers.Where(examLecturer => examLecturer.ExamId == id);
+        foreach (var examLecturer in examLectures)
         {
-            context.Remove(el);
+            context.Remove(examLecturer);
         }
 
         foreach (var lecturerId in lecturersIds)
@@ -162,12 +168,12 @@ public class ExamQueries(ScheduleContext context)
     /// <returns>Response status.</returns>
     public async Task<IResult> DeleteExam(int examId)
     {
-        var exam = context.Exams.First(exam => exam.ExamId == examId);
-        var examLectures = context.ExamLecturers.Where(el => el.ExamId == examId);
-        context.Exams.Remove(exam);
-        foreach (var el in examLectures)
+        var deletedExam = context.Exams.First(exam => exam.ExamId == examId);
+        var examLectures = context.ExamLecturers.Where(examLecturer => examLecturer.ExamId == examId);
+        context.Exams.Remove(deletedExam);
+        foreach (var examLecturer in examLectures)
         {
-            context.Remove(el);
+            context.Remove(examLecturer);
         }
 
         await context.SaveChangesAsync();

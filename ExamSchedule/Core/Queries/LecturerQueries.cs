@@ -4,8 +4,8 @@
 
 namespace ExamSchedule.Core.Queries;
 
+using ExamSchedule.Core.Models;
 using Microsoft.EntityFrameworkCore;
-using Models;
 
 /// <summary>
 /// Lecturer queries.
@@ -19,34 +19,34 @@ public class LecturerQueries(ScheduleContext context)
     /// <returns>List of lecturers.</returns>
     public async Task<IEnumerable<Lecturer>> GetLecturers(int? id = null)
     {
-        var result = await context.Lecturers.ToListAsync();
+        var result = context.Lecturers.AsQueryable();
         if (id != null)
         {
-            result = result.Where(lec => lec.LecturerId == id).ToList();
+            result = result.Where(lecturer => lecturer.LecturerId == id);
         }
 
-        return result;
+        return await result.ToListAsync();
     }
 
     /// <summary>
     /// Insets new lecturer.
     /// </summary>
-    /// <param name="lec">Input lecturer.</param>
+    /// <param name="inputLecturer">Input lecturer.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> InsertLecturer(InputLecturer lec)
+    public async Task<IResult> InsertLecturer(InputLecturer inputLecturer)
     {
-        if (lec.Checksum == string.Empty || lec.Email == string.Empty)
+        if (inputLecturer.Checksum == string.Empty || inputLecturer.Email == string.Empty)
         {
             return Results.BadRequest("Checksum and Email fields are required");
         }
 
         var newLecturer = new Lecturer()
         {
-            FirstName = lec.FirstName,
-            LastName = lec.LastName,
-            MiddleName = lec.MiddleName,
-            Email = lec.Email,
-            Checksum = lec.Checksum,
+            FirstName = inputLecturer.FirstName,
+            LastName = inputLecturer.LastName,
+            MiddleName = inputLecturer.MiddleName,
+            Email = inputLecturer.Email,
+            Checksum = inputLecturer.Checksum,
         };
         context.Lecturers.Add(newLecturer);
         await context.SaveChangesAsync();
@@ -57,25 +57,25 @@ public class LecturerQueries(ScheduleContext context)
     /// Updates lecturer.
     /// </summary>
     /// <param name="id">Lecturer id.</param>
-    /// <param name="lec">Input lecturer.</param>
+    /// <param name="inputLecturer">Input lecturer.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> UpdateLecturer(int id, InputLecturer lec)
+    public async Task<IResult> UpdateLecturer(int id, InputLecturer inputLecturer)
     {
         try
         {
-            var prev = context.Lecturers.First(l => l.LecturerId == id);
+            var prev = context.Lecturers.First(lecturer => lecturer.LecturerId == id);
 
-            prev.Email = string.IsNullOrEmpty(lec.Email) ? prev.Email : lec.Email;
-            prev.Checksum = string.IsNullOrEmpty(lec.Checksum) ? prev.Checksum : lec.Checksum;
-            prev.FirstName = string.IsNullOrEmpty(lec.FirstName) ? prev.FirstName : lec.FirstName;
-            prev.LastName = string.IsNullOrEmpty(lec.LastName) ? prev.LastName : lec.LastName;
-            prev.MiddleName = string.IsNullOrEmpty(lec.MiddleName) ? prev.MiddleName : lec.MiddleName;
+            prev.Email = string.IsNullOrEmpty(inputLecturer.Email) ? prev.Email : inputLecturer.Email;
+            prev.Checksum = string.IsNullOrEmpty(inputLecturer.Checksum) ? prev.Checksum : inputLecturer.Checksum;
+            prev.FirstName = string.IsNullOrEmpty(inputLecturer.FirstName) ? prev.FirstName : inputLecturer.FirstName;
+            prev.LastName = string.IsNullOrEmpty(inputLecturer.LastName) ? prev.LastName : inputLecturer.LastName;
+            prev.MiddleName = string.IsNullOrEmpty(inputLecturer.MiddleName) ? prev.MiddleName : inputLecturer.MiddleName;
             await context.SaveChangesAsync();
             return Results.Ok();
         }
-        catch (InvalidOperationException e)
+        catch (InvalidOperationException exception)
         {
-            return Results.BadRequest(e);
+            return Results.BadRequest(exception);
         }
     }
 
@@ -86,8 +86,8 @@ public class LecturerQueries(ScheduleContext context)
     /// <returns>Response status.</returns>
     public async Task<IResult> DeleteLecturer(int id)
     {
-        var lecturer = context.Lecturers.First(lec => lec.LecturerId == id);
-        context.Lecturers.Remove(lecturer);
+        var deletedLecturer = context.Lecturers.First(lecturer => lecturer.LecturerId == id);
+        context.Lecturers.Remove(deletedLecturer);
         await context.SaveChangesAsync();
         return Results.Ok();
     }

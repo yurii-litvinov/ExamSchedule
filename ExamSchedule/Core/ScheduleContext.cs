@@ -4,7 +4,7 @@
 
 namespace ExamSchedule.Core;
 
-using Models;
+using ExamSchedule.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>
@@ -62,18 +62,18 @@ public class ScheduleContext : DbContext
         modelBuilder.Entity<Exam>(
             entity =>
             {
-                entity.HasOne(d => d.Location).WithMany(p => p.Exams)
-                    .HasForeignKey(d => d.LocationId)
+                entity.HasOne(exam => exam.Location).WithMany(location => location.Exams)
+                    .HasForeignKey(exam => exam.LocationId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("location_fk");
 
-                entity.HasOne(d => d.Student).WithMany(p => p.Exams)
-                    .HasForeignKey(d => d.StudentId)
+                entity.HasOne(exam => exam.Student).WithMany(student => student.Exams)
+                    .HasForeignKey(exam => exam.StudentId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("student_fk");
 
-                entity.HasOne(d => d.Type).WithMany(p => p.Exams)
-                    .HasForeignKey(d => d.TypeId)
+                entity.HasOne(exam => exam.Type).WithMany(examType => examType.Exams)
+                    .HasForeignKey(exam => exam.TypeId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("type_fk");
             });
@@ -81,13 +81,13 @@ public class ScheduleContext : DbContext
         modelBuilder.Entity<ExamLecturer>(
             entity =>
             {
-                entity.HasOne(d => d.Exam).WithMany()
-                    .HasForeignKey(d => d.ExamId)
+                entity.HasOne(examLecturer => examLecturer.Exam).WithMany()
+                    .HasForeignKey(examLecturer => examLecturer.ExamId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("exam_fk");
 
-                entity.HasOne(d => d.Lecturer).WithMany()
-                    .HasForeignKey(d => d.LecturerId)
+                entity.HasOne(examLecturer => examLecturer.Lecturer).WithMany()
+                    .HasForeignKey(examLecturer => examLecturer.LecturerId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("lecturer_fk");
             });

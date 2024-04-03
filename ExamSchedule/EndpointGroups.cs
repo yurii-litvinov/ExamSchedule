@@ -4,9 +4,9 @@
 
 namespace ExamSchedule;
 
-using Core;
-using Core.Models;
-using Core.Queries;
+using ExamSchedule.Core;
+using ExamSchedule.Core.Models;
+using ExamSchedule.Core.Queries;
 
 /// <summary>
 /// Endpoints groups.
@@ -22,19 +22,20 @@ public static class EndpointGroups
     {
         group.MapGet(
             "/",
-            (ScheduleContext ctx) => new ExamQueries(ctx).GetExams().Result);
+            (ScheduleContext context) => new ExamQueries(context).GetExams().Result);
         group.MapGet(
             "/{examId:int}",
-            (int examId, ScheduleContext ctx) => new ExamQueries(ctx).GetExams(examId).Result);
+            (int examId, ScheduleContext context) => new ExamQueries(context).GetExams(examId).Result);
         group.MapPost(
             "/",
-            (InputExam exam, ScheduleContext ctx) => new ExamQueries(ctx).InsertExam(exam).Result);
+            (InputExam exam, ScheduleContext context) => new ExamQueries(context).InsertExam(exam).Result);
         group.MapPut(
             "/",
-            (int examId, InputExam exam, ScheduleContext ctx) => new ExamQueries(ctx).UpdateExam(examId, exam).Result);
+            (int examId, InputExam inputExam, ScheduleContext context) =>
+                new ExamQueries(context).UpdateExam(examId, inputExam).Result);
         group.MapDelete(
             "/{examId:int}",
-            (int examId, ScheduleContext ctx) => new ExamQueries(ctx).DeleteExam(examId).Result);
+            (int examId, ScheduleContext context) => new ExamQueries(context).DeleteExam(examId).Result);
 
         return group;
     }
@@ -46,20 +47,21 @@ public static class EndpointGroups
     /// <returns>Student route group builder.</returns>
     public static RouteGroupBuilder StudentGroup(this RouteGroupBuilder group)
     {
-        group.MapGet("/", (ScheduleContext ctx) => new StudentQueries(ctx).GetStudents().Result);
+        group.MapGet("/", (ScheduleContext context) => new StudentQueries(context).GetStudents().Result);
         group.MapGet(
             "/{studentId:int}",
-            (int studentId, ScheduleContext ctx) => new StudentQueries(ctx).GetStudents(studentId).Result);
+            (int studentId, ScheduleContext context) => new StudentQueries(context).GetStudents(studentId).Result);
         group.MapPost(
             "/",
-            (InputStudent student, ScheduleContext ctx) => new StudentQueries(ctx).InsertStudent(student));
+            (InputStudent inputStudent, ScheduleContext context) =>
+                new StudentQueries(context).InsertStudent(inputStudent));
         group.MapPut(
             "/",
-            (int studentId, InputStudent student, ScheduleContext ctx) =>
-                new StudentQueries(ctx).UpdateStudent(studentId, student).Result);
+            (int studentId, InputStudent inputStudent, ScheduleContext context) =>
+                new StudentQueries(context).UpdateStudent(studentId, inputStudent).Result);
         group.MapDelete(
             "/{studentId:int}",
-            (int studentId, ScheduleContext ctx) => new StudentQueries(ctx).DeleteStudent(studentId).Result);
+            (int studentId, ScheduleContext context) => new StudentQueries(context).DeleteStudent(studentId).Result);
 
         return group;
     }
@@ -71,17 +73,19 @@ public static class EndpointGroups
     /// <returns>Employee route group builder.</returns>
     public static RouteGroupBuilder EmployeeGroup(this RouteGroupBuilder group)
     {
-        group.MapGet("/", (ScheduleContext ctx) => new EmployeeQueries(ctx).GetEmployees().Result);
+        group.MapGet("/", (ScheduleContext context) => new EmployeeQueries(context).GetEmployees().Result);
         group.MapPost(
             "/",
-            (InputEmployee employee, ScheduleContext ctx) => new EmployeeQueries(ctx).InsertEmployee(employee).Result);
+            (InputEmployee inputEmployee, ScheduleContext context) =>
+                new EmployeeQueries(context).InsertEmployee(inputEmployee).Result);
         group.MapPut(
             "/",
-            (int employeeId, InputEmployee employee, ScheduleContext ctx) =>
-                new EmployeeQueries(ctx).UpdateEmployee(employeeId, employee).Result);
+            (int employeeId, InputEmployee inputEmployee, ScheduleContext context) =>
+                new EmployeeQueries(context).UpdateEmployee(employeeId, inputEmployee).Result);
         group.MapDelete(
             "/{employeeId:int}",
-            (int employeeId, ScheduleContext ctx) => new EmployeeQueries(ctx).DeleteEmployee(employeeId).Result);
+            (int employeeId, ScheduleContext context) =>
+                new EmployeeQueries(context).DeleteEmployee(employeeId).Result);
 
         return group;
     }
@@ -93,20 +97,22 @@ public static class EndpointGroups
     /// <returns>Lecturer route group builder.</returns>
     public static RouteGroupBuilder LecturerGroup(this RouteGroupBuilder group)
     {
-        group.MapGet("/", (ScheduleContext ctx) => new LecturerQueries(ctx).GetLecturers().Result);
+        group.MapGet("/", (ScheduleContext context) => new LecturerQueries(context).GetLecturers().Result);
         group.MapGet(
             "/{lecturerId:int}",
-            (int lecturerId, ScheduleContext ctx) => new LecturerQueries(ctx).GetLecturers(lecturerId).Result);
+            (int lecturerId, ScheduleContext context) => new LecturerQueries(context).GetLecturers(lecturerId).Result);
         group.MapPost(
             "/",
-            (InputLecturer lecturer, ScheduleContext ctx) => new LecturerQueries(ctx).InsertLecturer(lecturer).Result);
+            (InputLecturer inputLecturer, ScheduleContext context) =>
+                new LecturerQueries(context).InsertLecturer(inputLecturer).Result);
         group.MapPut(
             "/",
-            (int lecturerId, InputLecturer lecturer, ScheduleContext ctx) =>
-                new LecturerQueries(ctx).UpdateLecturer(lecturerId, lecturer).Result);
+            (int lecturerId, InputLecturer inputLecturer, ScheduleContext context) =>
+                new LecturerQueries(context).UpdateLecturer(lecturerId, inputLecturer).Result);
         group.MapDelete(
             "/{lecturerId:int}",
-            (int lecturerId, ScheduleContext ctx) => new LecturerQueries(ctx).DeleteLecturer(lecturerId).Result);
+            (int lecturerId, ScheduleContext context) =>
+                new LecturerQueries(context).DeleteLecturer(lecturerId).Result);
 
         return group;
     }
@@ -118,17 +124,19 @@ public static class EndpointGroups
     /// <returns>Location route group builder.</returns>
     public static RouteGroupBuilder LocationGroup(this RouteGroupBuilder group)
     {
-        group.MapGet("/", (ScheduleContext ctx) => new LocationQueries(ctx).GetLocations().Result);
+        group.MapGet("/", (ScheduleContext context) => new LocationQueries(context).GetLocations().Result);
         group.MapPost(
             "/",
-            (Location location, ScheduleContext ctx) => new LocationQueries(ctx).InsertLocation(location).Result);
+            (Location location, ScheduleContext context) =>
+                new LocationQueries(context).InsertLocation(location).Result);
         group.MapPut(
             "/",
-            (int locationId, InputLocation location, ScheduleContext ctx) =>
-                new LocationQueries(ctx).UpdateLocation(locationId, location).Result);
+            (int locationId, InputLocation inputLocation, ScheduleContext context) =>
+                new LocationQueries(context).UpdateLocation(locationId, inputLocation).Result);
         group.MapDelete(
             "/{locationId:int}",
-            (int locationId, ScheduleContext ctx) => new LocationQueries(ctx).DeleteLocation(locationId).Result);
+            (int locationId, ScheduleContext context) =>
+                new LocationQueries(context).DeleteLocation(locationId).Result);
 
         return group;
     }
