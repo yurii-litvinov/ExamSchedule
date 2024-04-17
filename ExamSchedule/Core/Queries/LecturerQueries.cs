@@ -50,7 +50,7 @@ public class LecturerQueries(ScheduleContext context)
         };
         context.Lecturers.Add(newLecturer);
         await context.SaveChangesAsync();
-        return Results.Ok();
+        return Results.Ok(newLecturer.LecturerId);
     }
 
     /// <summary>
@@ -69,7 +69,9 @@ public class LecturerQueries(ScheduleContext context)
             prev.Checksum = string.IsNullOrEmpty(inputLecturer.Checksum) ? prev.Checksum : inputLecturer.Checksum;
             prev.FirstName = string.IsNullOrEmpty(inputLecturer.FirstName) ? prev.FirstName : inputLecturer.FirstName;
             prev.LastName = string.IsNullOrEmpty(inputLecturer.LastName) ? prev.LastName : inputLecturer.LastName;
-            prev.MiddleName = string.IsNullOrEmpty(inputLecturer.MiddleName) ? prev.MiddleName : inputLecturer.MiddleName;
+            prev.MiddleName = string.IsNullOrEmpty(inputLecturer.MiddleName)
+                ? prev.MiddleName
+                : inputLecturer.MiddleName;
             await context.SaveChangesAsync();
             return Results.Ok();
         }

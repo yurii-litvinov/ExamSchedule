@@ -33,11 +33,11 @@ public class LocationQueries(ScheduleContext context)
     /// </summary>
     /// <param name="location">Input location.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> InsertLocation(Location location)
+    public async Task<int> InsertLocation(Location location)
     {
         context.Locations.Add(location);
         await context.SaveChangesAsync();
-        return Results.Ok();
+        return location.LocationId;
     }
 
     /// <summary>

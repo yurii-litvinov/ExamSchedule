@@ -50,7 +50,7 @@ public class EmployeeQueries(ScheduleContext context)
         };
         context.Employees.Add(newEmployee);
         await context.SaveChangesAsync();
-        return Results.Ok();
+        return Results.Ok(newEmployee.EmployeeId);
     }
 
     /// <summary>
