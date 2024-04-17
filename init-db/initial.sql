@@ -1,6 +1,6 @@
 create table Location
 (
-    Location_ID int         not null,
+    Location_ID int         not null GENERATED ALWAYS AS IDENTITY,
     Classroom   varchar(50) not null,
     CONSTRAINT Location_PK PRIMARY KEY (Location_ID)
 );
@@ -68,11 +68,15 @@ create table Exam_Lecturer
     CONSTRAINT Lecturer_FK FOREIGN KEY (Lecturer_ID) REFERENCES Lecturer (Lecturer_ID)
 );
 
-insert into Location(location_id, classroom)
-values (0, '3389');
+insert into Location(classroom)
+values ('3389');
 
 insert into Exam_Type(Exam_Type_ID, Title)
-values (0, 'Пересдача');
+values (0, 'Сдача');
+insert into Exam_Type(Exam_Type_ID, Title)
+values (1, 'Пересдача');
+insert into Exam_Type(Exam_Type_ID, Title)
+values (2, 'Комиссия');
 
 insert into Student(First_Name, Last_Name, Middle_Name, Student_Group)
 VALUES ('Аноним', 'Анонимов', 'Анонимович', '22.Б22');
@@ -81,11 +85,11 @@ insert into Lecturer(First_Name, Last_Name, Middle_Name, Email, Checksum)
 values ('Лектор', 'Лекторов', 'Лекторович', 'lektor@mail.ru', 'lektor');
 
 insert into Exam(Title, Type_ID, Student_ID, Date_Time, Location_ID)
-values ('Экзамен', 0, 1, '2022-08-30 10:10:10', 0);
+values ('Экзамен', 0, 1, '2022-08-30 10:10:10', 1);
 insert into Exam(Title, Type_ID, Student_ID, Date_Time, Location_ID)
-values ('Другой экзамен', 0, 1, '2022-10-30 10:10:10', 0);
+values ('Другой экзамен', 0, 1, '2022-10-30 10:10:10', 1);
 insert into Exam(Title, Type_ID, Student_ID, Date_Time, Location_ID)
-values ('Еще один экзамен', 0, 1, '2024-12-30 10:10:10', 0);
+values ('Еще один экзамен', 0, 1, '2024-12-30 10:10:10', 1);
 
 
 insert into Exam_Lecturer(Exam_ID, Lecturer_ID)

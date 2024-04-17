@@ -33,7 +33,7 @@ public class StudentQueries(ScheduleContext context)
     /// </summary>
     /// <param name="inputStudent">Input student.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> InsertStudent(InputStudent inputStudent)
+    public async Task<int> InsertStudent(InputStudent inputStudent)
     {
         var student = new Student()
         {
@@ -44,7 +44,7 @@ public class StudentQueries(ScheduleContext context)
         };
         context.Students.Add(student);
         await context.SaveChangesAsync();
-        return Results.Ok();
+        return student.StudentId;
     }
 
     /// <summary>

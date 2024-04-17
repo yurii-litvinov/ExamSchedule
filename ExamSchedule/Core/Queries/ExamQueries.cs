@@ -56,25 +56,55 @@ public class ExamQueries(ScheduleContext context)
                 lecturerInitials =>
                     context.Lecturers
                         .First(
-                            lecturer => lecturer.LastName + " " + lecturer.FirstName + " " + lecturer.MiddleName ==
-                                        lecturerInitials)
+                            lecturer =>
+                                (lecturer.LastName + " " + lecturer.FirstName + " " + lecturer.MiddleName).Trim() ==
+                                lecturerInitials)
                         .LecturerId)
             .ToList();
 
         var typeId = context.ExamTypes.First(examType => examType.Title == inputExam.Type).ExamTypeId;
-        var studentId = context.Students.First(
+        var studentId = context.Students.FirstOrDefault(
             student =>
-                student.LastName + " " + student.FirstName + " " + student.MiddleName == inputExam.StudentInitials &&
-                student.StudentGroup == inputExam.StudentGroup).StudentId;
-        var locationId = context.Locations.First(location => location.Classroom == inputExam.Classroom).LocationId;
+                (student.LastName + " " + student.FirstName + " " + student.MiddleName).Trim() ==
+                inputExam.StudentInitials &&
+                student.StudentGroup == inputExam.StudentGroup)?.StudentId;
+        if (studentId == null)
+        {
+            var initials = inputExam.StudentInitials.Split();
+            if (initials.Length < 2)
+            {
+                return Results.BadRequest("Wrong student initials");
+            }
+
+            var middleName = initials.Length > 2 ? initials[2] : string.Empty;
+            studentId = await new StudentQueries(context).InsertStudent(
+                new InputStudent
+                {
+                    FirstName = initials[1],
+                    LastName = initials[0],
+                    MiddleName = middleName,
+                    StudentGroup = inputExam.StudentGroup,
+                });
+        }
+
+        var locationId = context.Locations.FirstOrDefault(location => location.Classroom == inputExam.Classroom)
+            ?.LocationId;
+        if (locationId == null)
+        {
+            locationId = await new LocationQueries(context).InsertLocation(
+                new Location()
+                {
+                    Classroom = inputExam.Classroom,
+                });
+        }
 
         var newExam = new Exam()
         {
             Title = inputExam.Title,
             TypeId = typeId,
-            StudentId = studentId,
+            StudentId = (int)studentId,
             DateTime = inputExam.DateTime,
-            LocationId = locationId,
+            LocationId = (int)locationId,
             IsPassed = false,
         };
         context.Exams.Add(newExam);
@@ -90,7 +120,7 @@ public class ExamQueries(ScheduleContext context)
 
         await context.SaveChangesAsync();
 
-        return Results.Ok();
+        return Results.Ok(newExam.ExamId);
     }
 
     /// <summary>
@@ -115,7 +145,7 @@ public class ExamQueries(ScheduleContext context)
         {
             prev.StudentId = context.Students.First(
                 student =>
-                    student.LastName + " " + student.FirstName + " " + student.MiddleName ==
+                    (student.LastName + " " + student.FirstName + " " + student.MiddleName).Trim() ==
                     inputExam.StudentInitials &&
                     student.StudentGroup == inputExam.StudentGroup).StudentId;
         }
@@ -135,8 +165,9 @@ public class ExamQueries(ScheduleContext context)
                 lecturerInitials =>
                     context.Lecturers
                         .First(
-                            lecturer => lecturer.LastName + " " + lecturer.FirstName + " " + lecturer.MiddleName ==
-                                        lecturerInitials)
+                            lecturer =>
+                                (lecturer.LastName + " " + lecturer.FirstName + " " + lecturer.MiddleName).Trim() ==
+                                lecturerInitials)
                         .LecturerId)
             .ToList();
 

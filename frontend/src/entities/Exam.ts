@@ -10,6 +10,16 @@ export interface Exam {
     lecturers: Lecturer[];
 }
 
+export interface InputExam {
+    title: string;
+    type: string;
+    studentInitials: string;
+    studentGroup: string;
+    classroom: string;
+    dateTime: string;
+    lecturersInitials: string[];
+}
+
 export interface Lecturer {
     lecturerId: number;
     firstName: string;
