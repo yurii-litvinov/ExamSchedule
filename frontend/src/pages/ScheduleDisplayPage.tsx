@@ -2,19 +2,20 @@ import {Layout} from "@shared/ui/layout/Layout.tsx";
 import {ExamDisplayTable} from "@widgets/ExamDisplayTable.tsx";
 import Button from "@mui/material/Button";
 import {ChangeEvent, useEffect, useState} from "react";
-import {getExams} from "@shared/services/axios.service.ts";
+import {getExams, getRoleById} from "@shared/services/axios.service.ts";
 import {Exam} from "@entities/Exam.ts";
 import {Collapse, TextField} from "@mui/material";
 import {ExpandLess, ExpandMore} from "@mui/icons-material";
 import moment from "moment/moment";
 import {CreationDialog} from "@widgets/CreationDialog.tsx";
+import {getMyId} from "@shared/services/localStorage.service.ts";
 
 
-interface ScheduleDisplayProps {
-    forEmployee: boolean,
-}
+// Page for schedule display
+export function ScheduleDisplayPage() {
+    /// If true, create new exam button will be available
+    const [forEmployee, setForEmployee] = useState(false);
 
-export function ScheduleDisplayPage({forEmployee = false}: ScheduleDisplayProps) {
     const [tableData, setTableData] = useState<Exam[]>([])
     const [passedData, setPassedData] = useState<Exam[]>([])
     const [openPassed, setOpenPassed] = useState(false)
@@ -29,6 +30,7 @@ export function ScheduleDisplayPage({forEmployee = false}: ScheduleDisplayProps)
         setSearchString(event.target.value)
     }
 
+    // Search filter function
     const searchFilter = (exams: Exam[]) => {
         if (!searchString) return exams
         return exams.filter((exam) => {
@@ -54,8 +56,15 @@ export function ScheduleDisplayPage({forEmployee = false}: ScheduleDisplayProps)
         setOpenDialog(true)
     }
 
+    const onCloseDialog = () => {
+        setOpenDialog(false)
+    }
+
 
     useEffect(() => {
+        getRoleById(Number(getMyId())).then(roleResponse => {
+            setForEmployee(["Админ", "Сотрудник"].includes(roleResponse.data))
+        })
         getExams().then(r => {
             const responseData: Exam[] = r.data
             setTableData(responseData.filter(ex => !ex.isPassed))
@@ -70,7 +79,7 @@ export function ScheduleDisplayPage({forEmployee = false}: ScheduleDisplayProps)
                     <TextField onChange={onSearchChange} value={searchString}
                                placeholder={"Поиск по ФИО, дисциплине, группе, типу экзамена"} fullWidth/>
                 </div>
-                <CreationDialog open={openDialog} closeDialog={() => setOpenDialog(false)}/>
+                <CreationDialog open={openDialog} closeDialog={onCloseDialog}/>
                 <div className="table-upper"
                      style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
                     <h1>Расписание сдач</h1>

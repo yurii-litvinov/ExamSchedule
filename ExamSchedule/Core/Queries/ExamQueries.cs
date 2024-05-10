@@ -2,6 +2,7 @@
 // Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
+// ReSharper disable RedundantNameQualifier
 namespace ExamSchedule.Core.Queries;
 
 using ExamSchedule.Core.Models;
@@ -54,12 +55,12 @@ public class ExamQueries(ScheduleContext context)
     {
         var lecturersIds = inputExam.LecturersInitials.Select(
                 lecturerInitials =>
-                    context.Lecturers
+                    context.Staffs
                         .First(
                             lecturer =>
                                 (lecturer.LastName + " " + lecturer.FirstName + " " + lecturer.MiddleName).Trim() ==
                                 lecturerInitials)
-                        .LecturerId)
+                        .StaffId)
             .ToList();
 
         var typeId = context.ExamTypes.First(examType => examType.Title == inputExam.Type).ExamTypeId;
@@ -163,12 +164,12 @@ public class ExamQueries(ScheduleContext context)
 
         var lecturersIds = inputExam.LecturersInitials.Select(
                 lecturerInitials =>
-                    context.Lecturers
+                    context.Staffs
                         .First(
                             lecturer =>
                                 (lecturer.LastName + " " + lecturer.FirstName + " " + lecturer.MiddleName).Trim() ==
                                 lecturerInitials)
-                        .LecturerId)
+                        .StaffId)
             .ToList();
 
         var examLectures = context.ExamLecturers.Where(examLecturer => examLecturer.ExamId == id);

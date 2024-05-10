@@ -22,27 +22,42 @@ create table Student
     CONSTRAINT Student_PK PRIMARY KEY (Student_ID)
 );
 
-create table Lecturer
+create table Role
 (
-    Lecturer_ID int         not null GENERATED ALWAYS AS IDENTITY,
-    First_Name  varchar(20) not null,
-    Last_Name   varchar(20) not null,
-    Middle_Name varchar(20) not null,
-    Email       varchar(50) not null,
-    Checksum    varchar(50) not null,
-    CONSTRAINT Lecturer_PK PRIMARY KEY (Lecturer_ID)
+    Role_ID int         not null,
+    Title   varchar(20) not null,
+    CONSTRAINT Role_PK PRIMARY KEY (Role_ID)
 );
 
-create table Employee
+create table Staff
 (
-    Employee_ID int         not null GENERATED ALWAYS AS IDENTITY,
-    First_Name  varchar(20) not null,
-    Last_Name   varchar(20) not null,
-    Middle_Name varchar(20) not null,
-    Email       varchar(50) not null,
-    Checksum    varchar(50) not null,
-    CONSTRAINT Employee_PK PRIMARY KEY (Employee_ID)
+    Staff_ID             int          not null GENERATED ALWAYS AS IDENTITY,
+    First_Name           varchar(20)  not null,
+    Last_Name            varchar(20)  not null,
+    Middle_Name          varchar(20)  not null,
+    Role_ID              int          not null,
+    Email                varchar(50)  not null,
+    Password             varchar(256) not null,
+    Refresh_Token        varchar(128),
+    Refresh_Token_Expiry timestamp,
+    CONSTRAINT Staff_PK PRIMARY KEY (Staff_ID),
+    CONSTRAINT Role_PK FOREIGN KEY (Role_ID) REFERENCES Role (Role_ID)
 );
+
+CREATE OR REPLACE FUNCTION check_lecturer_role(user_id INT)
+    RETURNS BOOLEAN AS
+$$
+BEGIN
+    IF EXISTS (SELECT 1
+               FROM Staff
+               WHERE Staff_ID = user_id
+                 AND Role_ID = 2) THEN
+        RETURN TRUE;
+    ELSE
+        RETURN FALSE;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
 
 create table Exam
 (
@@ -65,8 +80,16 @@ create table Exam_Lecturer
     Exam_ID     int not null,
     Lecturer_ID int not null,
     CONSTRAINT Exam_FK FOREIGN KEY (Exam_ID) REFERENCES Exam (Exam_ID),
-    CONSTRAINT Lecturer_FK FOREIGN KEY (Lecturer_ID) REFERENCES Lecturer (Lecturer_ID)
+    CONSTRAINT Lecturer_FK FOREIGN KEY (Lecturer_ID) REFERENCES Staff (Staff_ID),
+    CONSTRAINT CHK_LecturerRole CHECK (check_lecturer_role(Lecturer_ID))
 );
+
+insert into Role(Role_ID, Title)
+VALUES (0, 'Админ');
+insert into Role(Role_ID, Title)
+VALUES (1, 'Сотрудник');
+insert into Role(Role_ID, Title)
+VALUES (2, 'Преподаватель');
 
 insert into Location(classroom)
 values ('3389');
@@ -81,8 +104,9 @@ values (2, 'Комиссия');
 insert into Student(First_Name, Last_Name, Middle_Name, Student_Group)
 VALUES ('Аноним', 'Анонимов', 'Анонимович', '22.Б22');
 
-insert into Lecturer(First_Name, Last_Name, Middle_Name, Email, Checksum)
-values ('Лектор', 'Лекторов', 'Лекторович', 'lektor@mail.ru', 'lektor');
+insert into Staff(First_Name, Last_Name, Middle_Name, Role_ID, Email, Password)
+values ('Лектор', 'Лекторов', 'Лекторович', 2, 'lektor@mail.ru',
+        '$2a$11$Aa2mUjwbsOPVFVZiBnI8CepLV8ndaehHZgGrXmAYV.5eVUus/a9li');
 
 insert into Exam(Title, Type_ID, Student_ID, Date_Time, Location_ID)
 values ('Экзамен', 0, 1, '2022-08-30 10:10:10', 1);
@@ -91,7 +115,6 @@ values ('Другой экзамен', 0, 1, '2022-10-30 10:10:10', 1);
 insert into Exam(Title, Type_ID, Student_ID, Date_Time, Location_ID)
 values ('Еще один экзамен', 0, 1, '2024-12-30 10:10:10', 1);
 
-
 insert into Exam_Lecturer(Exam_ID, Lecturer_ID)
 VALUES (1, 1);
 insert into Exam_Lecturer(Exam_ID, Lecturer_ID)
@@ -99,11 +122,5 @@ VALUES (2, 1);
 insert into Exam_Lecturer(Exam_ID, Lecturer_ID)
 VALUES (3, 1);
 
--- drop table Exam_Lecturer;
--- drop table Exam;
--- drop sequence exam_id_seq;
--- drop table Employee;
--- drop table Lecturer;
--- drop table Student;
--- drop table exam_type;
--- drop table Location;
+insert into Staff(First_Name, Last_Name, Middle_Name, Role_ID, Email, Password)
+values ('', '', '', 0, 'admin', '$2a$11$Aa2mUjwbsOPVFVZiBnI8CepLV8ndaehHZgGrXmAYV.5eVUus/a9li')

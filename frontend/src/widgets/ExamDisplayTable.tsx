@@ -15,6 +15,7 @@ interface TableProps {
 }
 
 
+// Table for exam display
 export const ExamDisplayTable = ({data, setData, onPassedAction}: TableProps) => {
     moment.locale('ru')
     const headers = useMemo(() => ["Cдан/не сдан", "Id", "Студент", "Дисциплина", "Группа", "Тип", "Место проведения", "Дата", "Преподаватели", ""], [])
@@ -27,6 +28,7 @@ export const ExamDisplayTable = ({data, setData, onPassedAction}: TableProps) =>
         })
     }
 
+    // Action on change passed status button click
     const onPassedClick = (examId: number) => {
         let dataCopy = data;
         const exam = dataCopy.find(ex => ex.examId == examId)

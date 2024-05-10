@@ -1,3 +1,4 @@
+// Exam interfaces
 export interface Exam {
     examId: number;
     title: string;
@@ -21,7 +22,7 @@ export interface InputExam {
 }
 
 export interface Lecturer {
-    lecturerId: number;
+    staffId: number;
     firstName: string;
     lastName: string;
     middleName: string;
