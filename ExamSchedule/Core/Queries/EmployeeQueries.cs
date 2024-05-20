@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 /// </summary>
 public class EmployeeQueries(ScheduleContext context)
 {
-    private const int EmployeeRoleId = 1;
+    private const int EmployeeRoleId = (int)EnumRoles.EmployeeRole;
 
     /// <summary>
     /// Gets employees.

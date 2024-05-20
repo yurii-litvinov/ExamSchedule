@@ -202,11 +202,12 @@ public class ExamQueries(ScheduleContext context)
     {
         var deletedExam = context.Exams.First(exam => exam.ExamId == examId);
         var examLectures = context.ExamLecturers.Where(examLecturer => examLecturer.ExamId == examId);
-        context.Exams.Remove(deletedExam);
         foreach (var examLecturer in examLectures)
         {
             context.Remove(examLecturer);
         }
+
+        context.Exams.Remove(deletedExam);
 
         await context.SaveChangesAsync();
         return Results.Ok();

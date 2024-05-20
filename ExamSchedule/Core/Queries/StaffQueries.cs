@@ -58,6 +58,7 @@ public class StaffQueries(ScheduleContext context)
             prev.Password = string.IsNullOrEmpty(inputStaff.Password)
                 ? prev.Password
                 : BCrypt.Net.BCrypt.HashPassword(inputStaff.Password);
+            prev.RoleId = inputStaff.RoleId;
             prev.FirstName = string.IsNullOrEmpty(inputStaff.FirstName) ? prev.FirstName : inputStaff.FirstName;
             prev.LastName = string.IsNullOrEmpty(inputStaff.LastName) ? prev.LastName : inputStaff.LastName;
             prev.MiddleName = string.IsNullOrEmpty(inputStaff.MiddleName)

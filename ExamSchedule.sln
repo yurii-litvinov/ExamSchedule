@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExamSchedule", "ExamSchedul
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScheduleParserCLI", "ScheduleParserCLI\ScheduleParserCLI.csproj", "{C07C7861-91D7-4E74-96ED-4AF9E88FBC7D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExamScheduleTests", "ExamScheduleTests\ExamScheduleTests.csproj", "{C2166CD1-9377-4F01-A67B-C2466FA68B1B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{C07C7861-91D7-4E74-96ED-4AF9E88FBC7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C07C7861-91D7-4E74-96ED-4AF9E88FBC7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C07C7861-91D7-4E74-96ED-4AF9E88FBC7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2166CD1-9377-4F01-A67B-C2466FA68B1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2166CD1-9377-4F01-A67B-C2466FA68B1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2166CD1-9377-4F01-A67B-C2466FA68B1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2166CD1-9377-4F01-A67B-C2466FA68B1B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

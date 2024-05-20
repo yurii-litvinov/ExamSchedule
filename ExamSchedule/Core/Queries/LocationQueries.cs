@@ -4,6 +4,7 @@
 
 namespace ExamSchedule.Core.Queries;
 
+// ReSharper disable once RedundantNameQualifier
 using ExamSchedule.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,10 +32,14 @@ public class LocationQueries(ScheduleContext context)
     /// <summary>
     /// Inserts new location.
     /// </summary>
-    /// <param name="location">Input location.</param>
+    /// <param name="inputLocation">Input location.</param>
     /// <returns>Response status.</returns>
-    public async Task<int> InsertLocation(Location location)
+    public async Task<int> InsertLocation(InputLocation inputLocation)
     {
+        var location = new Location()
+        {
+            Classroom = inputLocation.Classroom,
+        };
         context.Locations.Add(location);
         await context.SaveChangesAsync();
         return location.LocationId;

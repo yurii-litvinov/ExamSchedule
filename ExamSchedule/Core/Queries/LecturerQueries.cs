@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 /// </summary>
 public class LecturerQueries(ScheduleContext context)
 {
-    private const int LecturerRoleId = 2;
+    private const int LecturerRoleId = (int)EnumRoles.LecturerRole;
 
     /// <summary>
     /// Gets lecturers.

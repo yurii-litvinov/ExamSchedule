@@ -140,7 +140,7 @@ public static class EndpointGroups
         group.MapGet("/", (ScheduleContext context) => new LocationQueries(context).GetLocations().Result);
         group.MapPost(
             "/",
-            (Location location, ScheduleContext context) =>
+            (InputLocation location, ScheduleContext context) =>
                 new LocationQueries(context).InsertLocation(location).Result);
         group.MapPut(
             "/",
