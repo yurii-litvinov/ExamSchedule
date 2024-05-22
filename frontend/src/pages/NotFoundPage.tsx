@@ -5,7 +5,7 @@ import {Layout} from "@shared/ui/layout/Layout.tsx";
 export function NotFoundPage() {
     return (
         <Layout>
-            <h1>Page not found.</h1>
+            <h1 className="page-title">Page not found.</h1>
         </Layout>
     );
 }

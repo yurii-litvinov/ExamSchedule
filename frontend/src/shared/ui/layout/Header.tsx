@@ -141,7 +141,7 @@ export default function Header() {
                     </Box>
 
                     {window.location.pathname !== '/login' && <Box sx={{flexGrow: 0}}>
-                        <IconButton onClick={handleOpenUserMenu}>
+                        <IconButton className="menu-button" onClick={handleOpenUserMenu}>
                             <AccountCircleIcon sx={{color: 'white'}}/>
                         </IconButton>
                         <Menu
@@ -160,7 +160,7 @@ export default function Header() {
                             open={anchorElUser != null}
                             onClose={handleCloseUserMenu}
                         >
-                            <MenuItem key={"Профиль"} onClick={() =>
+                            <MenuItem className="profile-button" key={"Профиль"} onClick={() =>
                                 handleCloseUserMenuAndNavigate("/profile")
                             }>
                                 <Typography
@@ -171,7 +171,7 @@ export default function Header() {
                                     }}
                                 > Профиль </Typography>
                             </MenuItem>
-                            <MenuItem key={"Выйти"}>
+                            <MenuItem className="logout-button" key={"Выйти"}>
                                 <Typography
                                     onClick={() => logout()}
                                     textAlign="center"

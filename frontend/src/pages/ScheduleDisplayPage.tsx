@@ -76,7 +76,7 @@ export function ScheduleDisplayPage() {
         <Layout>
             <div className="content" style={{margin: "2% 10%"}}>
                 <div className="search" style={{marginBottom: "20px"}}>
-                    <TextField onChange={onSearchChange} value={searchString}
+                    <TextField className="filter-input" onChange={onSearchChange} value={searchString}
                                placeholder={"Поиск по ФИО, дисциплине, группе, типу экзамена"} fullWidth/>
                 </div>
                 <CreationDialog open={openDialog} closeDialog={onCloseDialog}/>
@@ -86,12 +86,12 @@ export function ScheduleDisplayPage() {
                     {forEmployee &&
                         <div className="table-actions"
                              style={{display: "flex", flexDirection: "column", justifyContent: "space-around"}}>
-                            <Button variant={"contained"} onClick={onOpenDialog}>Добавить</Button>
+                            <Button className="create-exam-button" variant={"contained"} onClick={onOpenDialog}>Добавить</Button>
                         </div>
                     }
                 </div>
                 <ExamDisplayTable data={searchFilter(tableData)} setData={setTableData} onPassedAction={addToPassed}/>
-                <Button color={"inherit"} onClick={handleClick}>
+                <Button className="show-passed-button" color={"inherit"} onClick={handleClick}>
                     <h1>Сдано</h1>
                     {openPassed ? <ExpandLess/> : <ExpandMore/>}
                 </Button>

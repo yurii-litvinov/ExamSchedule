@@ -50,7 +50,7 @@ export function LoginPage() {
                              margin: "10px 0",
                          }}>
                         <h3 style={{marginRight: "10px"}}>Логин:</h3>
-                        <TextField style={{width: "300px"}} required onChange={onChangeLogin}/>
+                        <TextField className="login-input" style={{width: "300px"}} required onChange={onChangeLogin}/>
                     </div>
                     <div className="label-form"
                          style={{
@@ -59,9 +59,9 @@ export function LoginPage() {
                              margin: "10px 0",
                          }}>
                         <h3 style={{marginRight: "10px"}}>Пароль:</h3>
-                        <TextField type={"password"} style={{width: "300px"}} required onChange={onChangePassword}/>
+                        <TextField className="password-input" type={"password"} style={{width: "300px"}} required onChange={onChangePassword}/>
                     </div>
-                    <Button variant={"contained"} type={"submit"}>Войти</Button>
+                    <Button className="submit-button" variant={"contained"} type={"submit"}>Войти</Button>
                 </form>
             </div>
         </Layout>

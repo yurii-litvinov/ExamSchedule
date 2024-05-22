@@ -63,7 +63,8 @@ export const ExamDisplayTable = ({data, setData, onPassedAction}: TableProps) =>
                                     <TableCell key={rowIndex + "." + cellIndex} align={"center"}
                                                style={{maxWidth: "50px"}}>{cell}</TableCell>)}
 
-                            <TableCell><IconButton onClick={() => onDeleteClick(row.examId)}><DeleteIcon/></IconButton></TableCell>
+                            <TableCell><IconButton className="delete-button"
+                                                   onClick={() => onDeleteClick(row.examId)}><DeleteIcon/></IconButton></TableCell>
                         </TableRow>)
                     }
                 </TableBody>

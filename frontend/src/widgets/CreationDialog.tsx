@@ -124,7 +124,8 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                          justifyContent: "space-between"
                      }}>
                     <h3 style={{marginRight: "10px"}}>ФИО студента:</h3>
-                    <TextField style={{width: "300px"}} required onChange={onChangeStudentInitials}/>
+                    <TextField className="student-initials-input" style={{width: "300px"}} required
+                               onChange={onChangeStudentInitials}/>
                 </div>
                 <div className="label-form"
                      style={{
@@ -134,7 +135,8 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                          justifyContent: "space-between"
                      }}>
                     <h3 style={{marginRight: "10px"}}>Группа:</h3>
-                    <TextField style={{width: "300px"}} required onChange={onChangeStudentGroup}/>
+                    <TextField className="student-group-input" style={{width: "300px"}} required
+                               onChange={onChangeStudentGroup}/>
                 </div>
                 <div className="label-form"
                      style={{
@@ -144,7 +146,7 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                          justifyContent: "space-between"
                      }}>
                     <h3 style={{marginRight: "10px"}}>Дисциплина:</h3>
-                    <TextField style={{width: "300px"}} required onChange={onChangeTitle}/>
+                    <TextField className="exam-title-input" style={{width: "300px"}} required onChange={onChangeTitle}/>
                 </div>
             </div>
 
@@ -153,7 +155,8 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                 <div className="label-form"
                      style={{display: "flex", alignItems: "center", margin: "10px 0"}}>
                     <h3 style={{marginRight: "10px"}}>ФИО преподавателя:</h3>
-                    <TextField style={{width: "300px"}} required onChange={onChangeLecturerInitials}/>
+                    <TextField className="lecturer-initials-input" style={{width: "300px"}} required
+                               onChange={onChangeLecturerInitials}/>
                 </div>
                 <div className="educator-timetable"
                      style={{alignSelf: "flex-start", flexBasis: "50%", display: "flex", flexDirection: "column"}}>
@@ -187,7 +190,7 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                     <div className="label-form"
                          style={{display: "flex", alignItems: "center", margin: "10px 0"}}>
                         <h3 style={{marginRight: "10px"}}>Тип экзамена:</h3>
-                        <Select required value={examType} onChange={onChangeExamType}>
+                        <Select className="exam-type-input" required value={examType} onChange={onChangeExamType}>
                             <MenuItem value={"Сдача"}>Сдача</MenuItem>
                             <MenuItem value={"Пересдача"}>Пересдача</MenuItem>
                             <MenuItem value={"Комиссия"}>Комиссия</MenuItem>
@@ -197,7 +200,8 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                          style={{display: "flex", alignItems: "center", margin: "10px 0"}}>
                         <h3 style={{marginRight: "10px"}}>Дата и время проведения:</h3>
                         <LocalizationProvider dateAdapter={AdapterMoment}>
-                            <DesktopDateTimePicker ampm={false} onChange={onChangeDateTime}/>
+                            <DesktopDateTimePicker className="dadatetime-input" ampm={false}
+                                                   onChange={onChangeDateTime}/>
                         </LocalizationProvider>
                     </div>
                     <div className="label-form"
@@ -207,7 +211,8 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                              margin: "10px 0",
                          }}>
                         <h3 style={{marginRight: "10px"}}>Место проведения:</h3>
-                        <TextField style={{width: "300px"}} required onChange={onChangeLocation}/>
+                        <TextField className="location-input" style={{width: "300px"}} required
+                                   onChange={onChangeLocation}/>
                     </div>
                 </div>
                 <div className="location-timetable"
@@ -238,8 +243,9 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                 </div>
             </div>
             <div className="buttons" style={{alignSelf: "flex-end"}}>
-                <Button style={{margin: "0 10px"}} variant={"outlined"} type={"submit"}>Создать</Button>
-                <Button variant={"contained"} onClick={closeDialog}>Закрыть</Button>
+                <Button className="submit-button" style={{margin: "0 10px"}} variant={"contained"}
+                        type={"submit"}>Создать</Button>
+                <Button className="close-button" variant={"outlined"} onClick={closeDialog}>Закрыть</Button>
             </div>
         </form>
     </Dialog>
