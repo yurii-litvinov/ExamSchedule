@@ -2,7 +2,7 @@
 // Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
-namespace ExamSchedule.Core.Models.Timetable;
+namespace TimetableAdapter.Models;
 
 /// <summary>
 /// Educator events day model.

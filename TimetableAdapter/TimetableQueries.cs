@@ -2,9 +2,9 @@
 // Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
-namespace ExamSchedule.Core.Queries.Timetable;
+using TimetableAdapter.Models;
 
-using ExamSchedule.Core.Models.Timetable;
+namespace TimetableAdapter;
 
 /// <summary>
 /// Timetable queries.

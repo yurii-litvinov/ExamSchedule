@@ -2,15 +2,15 @@
 // Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
-// ReSharper disable RedundantNameQualifier
-// ReSharper disable BadParensLineBreaks
 namespace ExamSchedule;
 
+// ReSharper disable RedundantNameQualifier
+// ReSharper disable BadParensLineBreaks
 using ExamSchedule.Core;
 using ExamSchedule.Core.Models;
 using ExamSchedule.Core.Queries;
-using ExamSchedule.Core.Queries.Timetable;
 using Microsoft.AspNetCore.Authorization;
+using TimetableAdapter;
 
 /// <summary>
 /// Endpoints groups.

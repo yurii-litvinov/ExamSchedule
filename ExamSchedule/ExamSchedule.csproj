@@ -36,6 +36,7 @@
 
     <ItemGroup>
         <ProjectReference Include="../ScheduleParser/ScheduleParser.csproj" />
+        <ProjectReference Include="../TimetableAdapter/TimetableAdapter.csproj" />
     </ItemGroup>
 
 </Project>
