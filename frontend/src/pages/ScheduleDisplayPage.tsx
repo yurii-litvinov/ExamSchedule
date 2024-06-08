@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import {ChangeEvent, useEffect, useState} from "react";
 import {getExams, getRoleById} from "@shared/services/axios.service.ts";
 import {Exam} from "@entities/Exam.ts";
-import {Collapse, TextField} from "@mui/material";
+import {Autocomplete, Chip, Collapse, TextField} from "@mui/material";
 import {ExpandLess, ExpandMore} from "@mui/icons-material";
 import moment from "moment/moment";
 import {CreationDialog} from "@widgets/CreationDialog.tsx";
@@ -16,6 +16,7 @@ export function ScheduleDisplayPage() {
     /// If true, create new exam button will be available
     const [forEmployee, setForEmployee] = useState(false);
 
+    const [filterTags, setFilterTags] = useState<string[]>([])
     const [tableData, setTableData] = useState<Exam[]>([])
     const [passedData, setPassedData] = useState<Exam[]>([])
     const [openPassed, setOpenPassed] = useState(false)
@@ -32,11 +33,11 @@ export function ScheduleDisplayPage() {
 
     // Search filter function
     const searchFilter = (exams: Exam[]) => {
-        if (!searchString) return exams
         return exams.filter((exam) => {
             const rowData = [exam.examId, exam.student_initials, exam.title, exam.student_group, exam.type, exam.classroom,
                 moment(exam.dateTime).format("DD.MM.YYYY HH:mm"), exam.lecturers.map(l => `${l.lastName} ${l.firstName} ${l.middleName}`).join(", ")]
-            return rowData.some((cell) => cell.toString().includes(searchString))
+            const expandedFilterTags = searchString ? filterTags.concat(searchString) : filterTags
+            return expandedFilterTags.every((tag) => rowData.some((cell) => cell.toString().toLowerCase().includes(tag.toLowerCase())))
         })
     }
 
@@ -60,6 +61,11 @@ export function ScheduleDisplayPage() {
         setOpenDialog(false)
     }
 
+    const onAddTag = (_: React.SyntheticEvent, tags: string[]) => {
+        setFilterTags(tags)
+        setSearchString("")
+    }
+
 
     useEffect(() => {
         getRoleById(Number(getMyId())).then(roleResponse => {
@@ -76,8 +82,29 @@ export function ScheduleDisplayPage() {
         <Layout>
             <div className="content" style={{margin: "2% 10%"}}>
                 <div className="search" style={{marginBottom: "20px"}}>
-                    <TextField className="filter-input" onChange={onSearchChange} value={searchString}
-                               placeholder={"Поиск по ФИО, дисциплине, группе, типу экзамена"} fullWidth/>
+                    <Autocomplete
+                        multiple
+                        id="tags-filled"
+                        options={[]}
+                        freeSolo
+                        onChange={onAddTag}
+                        renderTags={(value, getTagProps) =>
+                            value.map((option, index) => (
+                                <Chip
+                                    variant="outlined"
+                                    label={option}
+                                    {...getTagProps({index})}
+                                />
+                            ))
+                        }
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                className="filter-input" onChange={onSearchChange} value={searchString}
+                                placeholder="Поиск по ФИО, дисциплине, группе, типу экзамена"
+                            />
+                        )}
+                    />
                 </div>
                 <CreationDialog open={openDialog} closeDialog={onCloseDialog}/>
                 <div className="table-upper"
@@ -86,7 +113,8 @@ export function ScheduleDisplayPage() {
                     {forEmployee &&
                         <div className="table-actions"
                              style={{display: "flex", flexDirection: "column", justifyContent: "space-around"}}>
-                            <Button className="create-exam-button" variant={"contained"} onClick={onOpenDialog}>Добавить</Button>
+                            <Button className="create-exam-button" variant={"contained"}
+                                    onClick={onOpenDialog}>Добавить</Button>
                         </div>
                     }
                 </div>
