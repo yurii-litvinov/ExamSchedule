@@ -1,16 +1,4 @@
 // Exam interfaces
-export interface Exam {
-    examId: number;
-    title: string;
-    type: string;
-    student_initials: string;
-    student_group: string;
-    classroom: string;
-    dateTime: string;
-    isPassed: boolean;
-    lecturers: Lecturer[];
-}
-
 export interface InputExam {
     title: string;
     type: string;
@@ -20,6 +8,19 @@ export interface InputExam {
     dateTime: string;
     lecturersInitials: string[];
 }
+
+export interface Exam {
+    examId: number;
+    title: string;
+    type: string;
+    studentInitials: string;
+    studentGroup: string;
+    classroom: string;
+    dateTime: string;
+    isPassed: boolean;
+    lecturers: Lecturer[];
+}
+
 
 export interface Lecturer {
     staffId: number;

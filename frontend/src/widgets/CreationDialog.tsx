@@ -3,10 +3,15 @@ import Button from "@mui/material/Button";
 import {DesktopDateTimePicker, LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterMoment} from "@mui/x-date-pickers/AdapterMoment";
 import MenuItem from "@mui/material/MenuItem";
-import {ChangeEvent, FormEvent, useState} from "react";
+import {ChangeEvent, FormEvent, useEffect, useState} from "react";
 import {Moment} from "moment/moment";
-import {InputExam} from "@entities/Exam.ts";
-import {getEducatorTimetable, getLocationTimetable, insertExam} from "@shared/services/axios.service.ts";
+import {Exam, InputExam} from "@entities/Exam.ts";
+import {
+    getEducatorTimetable, getExam,
+    getLocationTimetable,
+    insertExam,
+    updateExam
+} from "@shared/services/axios.service.ts";
 import {EducatorEventsDay} from "@entities/EducatorTimetable.ts";
 import styled from "@emotion/styled";
 import {ClassroomEventsDay} from "@entities/ClassroomTimetable.ts";
@@ -15,18 +20,20 @@ import moment from "moment";
 
 interface DialogProps {
     open: boolean,
-    closeDialog: () => void
+    closeDialog: () => void,
+    editExamId: number,
 }
 
 // Dialog for creating new exams
-export const CreationDialog = ({open, closeDialog}: DialogProps) => {
-    const [studentInitials, setStudentInitials] = useState("");
-    const [studentGroup, setStudentGroup] = useState("");
-    const [title, setTitle] = useState("");
+export const CreationDialog = ({open, closeDialog, editExamId = -1}: DialogProps) => {
+    const [editExam, setEditExam] = useState<Exam>();
+    const [studentInitials, setStudentInitials] = useState(editExam?.studentInitials ?? "");
+    const [studentGroup, setStudentGroup] = useState(editExam?.studentGroup ?? "");
+    const [title, setTitle] = useState(editExam?.title ?? "");
     const [lecturerInitials, setLecturerInitials] = useState("");
-    const [dateTime, setDateTime] = useState(moment().utc().format());
-    const [location, setLocation] = useState("");
-    const [examType, setExamType] = useState("Пересдача");
+    const [dateTime, setDateTime] = useState(moment(editExam?.dateTime).utc().format() ?? moment().utc().format());
+    const [location, setLocation] = useState(editExam?.classroom ?? "");
+    const [examType, setExamType] = useState(editExam?.type ?? "");
     const [educatorTimetable, setEducatorTimetable] = useState<EducatorEventsDay[]>();
     const [locationTimetable, setLocationTimetable] = useState<ClassroomEventsDay[]>();
     const [dayValue, setDayValue] = useState("0");
@@ -98,12 +105,33 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
             dateTime: dateTime,
             lecturersInitials: [lecturerInitials]
         }
-        insertExam(exam).then(() => alert("Запись успешно добавлена")).catch(e => {
-            alert(e)
-            console.log(e)
-        })
+        if (editExamId >= 0) {
+            updateExam(editExamId, exam).then(() => alert("Запись успешно изменена")).catch(e => {
+                alert(e)
+                console.log(e)
+            })
+        } else {
+            insertExam(exam).then(() => alert("Запись успешно добавлена")).catch(e => {
+                alert(e)
+                console.log(e)
+            })
+        }
         closeDialog()
     }
+
+
+    useEffect(() => {
+        getExam(editExamId).then(r => {
+            const responseData: Exam = r.data[0]
+            setEditExam(responseData)
+            setStudentInitials(responseData?.studentInitials ?? "");
+            setStudentGroup(responseData?.studentGroup ?? "");
+            setTitle(responseData?.title ?? "");
+            setDateTime(moment(responseData?.dateTime).utc().format() ?? moment().utc().format());
+            setLocation(responseData?.classroom ?? "");
+            setExamType(responseData?.type ?? "");
+        })
+    }, [editExamId])
 
 
     return <Dialog open={open} PaperProps={{sx: {width: "93%", height: "95%", maxWidth: "100%", maxHeight: "100%"}}}>
@@ -125,7 +153,7 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                      }}>
                     <h3 style={{marginRight: "10px"}}>ФИО студента:</h3>
                     <TextField className="student-initials-input" style={{width: "300px"}} required
-                               onChange={onChangeStudentInitials}/>
+                               onChange={onChangeStudentInitials} value={studentInitials}/>
                 </div>
                 <div className="label-form"
                      style={{
@@ -136,7 +164,7 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                      }}>
                     <h3 style={{marginRight: "10px"}}>Группа:</h3>
                     <TextField className="student-group-input" style={{width: "300px"}} required
-                               onChange={onChangeStudentGroup}/>
+                               onChange={onChangeStudentGroup} value={studentGroup}/>
                 </div>
                 <div className="label-form"
                      style={{
@@ -146,7 +174,8 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                          justifyContent: "space-between"
                      }}>
                     <h3 style={{marginRight: "10px"}}>Дисциплина:</h3>
-                    <TextField className="exam-title-input" style={{width: "300px"}} required onChange={onChangeTitle}/>
+                    <TextField className="exam-title-input" style={{width: "300px"}} required onChange={onChangeTitle}
+                               value={title}/>
                 </div>
             </div>
 
@@ -156,7 +185,7 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                      style={{display: "flex", alignItems: "center", margin: "10px 0"}}>
                     <h3 style={{marginRight: "10px"}}>ФИО преподавателя:</h3>
                     <TextField className="lecturer-initials-input" style={{width: "300px"}} required
-                               onChange={onChangeLecturerInitials}/>
+                               onChange={onChangeLecturerInitials} value={lecturerInitials}/>
                 </div>
                 <div className="educator-timetable"
                      style={{alignSelf: "flex-start", flexBasis: "50%", display: "flex", flexDirection: "column"}}>
@@ -201,7 +230,7 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                         <h3 style={{marginRight: "10px"}}>Дата и время проведения:</h3>
                         <LocalizationProvider dateAdapter={AdapterMoment}>
                             <DesktopDateTimePicker className="dadatetime-input" ampm={false}
-                                                   onChange={onChangeDateTime}/>
+                                                   onChange={onChangeDateTime} value={moment(dateTime)}/>
                         </LocalizationProvider>
                     </div>
                     <div className="label-form"
@@ -212,7 +241,7 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
                          }}>
                         <h3 style={{marginRight: "10px"}}>Место проведения:</h3>
                         <TextField className="location-input" style={{width: "300px"}} required
-                                   onChange={onChangeLocation}/>
+                                   onChange={onChangeLocation} value={location}/>
                     </div>
                 </div>
                 <div className="location-timetable"
@@ -244,7 +273,7 @@ export const CreationDialog = ({open, closeDialog}: DialogProps) => {
             </div>
             <div className="buttons" style={{alignSelf: "flex-end"}}>
                 <Button className="submit-button" style={{margin: "0 10px"}} variant={"contained"}
-                        type={"submit"}>Создать</Button>
+                        type={"submit"}>Сохранить</Button>
                 <Button className="close-button" variant={"outlined"} onClick={closeDialog}>Закрыть</Button>
             </div>
         </form>

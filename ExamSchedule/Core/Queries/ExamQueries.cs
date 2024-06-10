@@ -24,9 +24,9 @@ public class ExamQueries(ScheduleContext context)
             select new
             {
                 exam.ExamId,
-                Student_initials = $"{exam.Student.FirstName} {exam.Student.LastName}",
+                StudentInitials = $"{exam.Student.LastName} {exam.Student.FirstName} {exam.Student.MiddleName}",
                 exam.Title,
-                Student_group = exam.Student.StudentGroup,
+                exam.Student.StudentGroup,
                 Type = exam.Type.Title,
                 exam.DateTime,
                 exam.IsPassed,
@@ -144,16 +144,47 @@ public class ExamQueries(ScheduleContext context)
 
         if (!string.IsNullOrEmpty(inputExam.StudentInitials) && !string.IsNullOrEmpty(inputExam.StudentGroup))
         {
-            prev.StudentId = context.Students.First(
+            var studentId = context.Students.FirstOrDefault(
                 student =>
                     (student.LastName + " " + student.FirstName + " " + student.MiddleName).Trim() ==
                     inputExam.StudentInitials &&
-                    student.StudentGroup == inputExam.StudentGroup).StudentId;
+                    student.StudentGroup == inputExam.StudentGroup)?.StudentId;
+            if (studentId == null)
+            {
+                var initials = inputExam.StudentInitials.Split();
+                if (initials.Length < 2)
+                {
+                    return Results.BadRequest("Wrong student initials");
+                }
+
+                var middleName = initials.Length > 2 ? initials[2] : string.Empty;
+                studentId = await new StudentQueries(context).InsertStudent(
+                    new InputStudent
+                    {
+                        FirstName = initials[1],
+                        LastName = initials[0],
+                        MiddleName = middleName,
+                        StudentGroup = inputExam.StudentGroup,
+                    });
+            }
+
+            prev.StudentId = (int)studentId;
         }
 
         if (!string.IsNullOrEmpty(inputExam.Classroom))
         {
-            prev.LocationId = context.Locations.First(location => location.Classroom == inputExam.Classroom).LocationId;
+            var locationId = context.Locations.FirstOrDefault(location => location.Classroom == inputExam.Classroom)
+                ?.LocationId;
+            if (locationId == null)
+            {
+                locationId = await new LocationQueries(context).InsertLocation(
+                    new Location()
+                    {
+                        Classroom = inputExam.Classroom,
+                    });
+            }
+
+            prev.LocationId = (int)locationId;
         }
 
         if (!inputExam.LecturersInitials.Any())

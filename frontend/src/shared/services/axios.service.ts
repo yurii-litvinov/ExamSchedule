@@ -1,5 +1,5 @@
 import axios, {AxiosHeaders} from "axios";
-import {Exam, InputExam} from "@entities/Exam.ts";
+import {InputExam} from "@entities/Exam.ts";
 import {authHeader, refreshToken} from "@shared/services/auth.service.ts";
 import {setAccessToken, setRefreshToken} from "@shared/services/localStorage.service.ts";
 
@@ -14,7 +14,7 @@ export const axiosService = axios.create({
 axiosService.interceptors.request
     .use(function (config) {
         if (config.url?.includes("api/")) {
-            config.headers = { ...authHeader() } as AxiosHeaders
+            config.headers = {...authHeader()} as AxiosHeaders
         }
         return config;
     });
@@ -23,7 +23,7 @@ axiosService.interceptors.request
 axiosService.interceptors.response
     .use(function (response) {
         return response;
-    },async function (error) {
+    }, async function (error) {
         const loginUrl = "/login"
         try {
             if (error.response.status === 401) {
@@ -46,13 +46,15 @@ axiosService.interceptors.response
 
 export const getExams = () => axiosService.get("api/exams")
 
+export const getExam = (id: number) => axiosService.get(`api/exams/${id}`)
+
 export const getRoleById = (id: number) => axiosService.get(`api/staffs/${id}/role`)
 
 export const login = (email: string, password: string) => axiosService.post(`api/login`, {email, password})
 
 export const deleteExam = (id: number) => axiosService.delete(`api/exams/${id}`)
 
-export const updateExam = (id: number, exam: Exam) => axiosService.put(`api/exams/?examId=${id}`, exam)
+export const updateExam = (id: number, exam: InputExam) => axiosService.put(`api/exams/?examId=${id}`, exam)
 
 export const insertExam = (exam: InputExam) => axiosService.post(`api/exams/`, exam)
 

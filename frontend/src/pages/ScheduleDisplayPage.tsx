@@ -16,6 +16,8 @@ export function ScheduleDisplayPage() {
     /// If true, create new exam button will be available
     const [forEmployee, setForEmployee] = useState(false);
 
+    const [editExamId, setEditExamId] = useState(-1);
+
     const [filterTags, setFilterTags] = useState<string[]>([])
     const [tableData, setTableData] = useState<Exam[]>([])
     const [passedData, setPassedData] = useState<Exam[]>([])
@@ -34,7 +36,7 @@ export function ScheduleDisplayPage() {
     // Search filter function
     const searchFilter = (exams: Exam[]) => {
         return exams.filter((exam) => {
-            const rowData = [exam.examId, exam.student_initials, exam.title, exam.student_group, exam.type, exam.classroom,
+            const rowData = [exam.examId, exam.studentInitials, exam.title, exam.studentGroup, exam.type, exam.classroom,
                 moment(exam.dateTime).format("DD.MM.YYYY HH:mm"), exam.lecturers.map(l => `${l.lastName} ${l.firstName} ${l.middleName}`).join(", ")]
             const expandedFilterTags = searchString ? filterTags.concat(searchString) : filterTags
             return expandedFilterTags.every((tag) => rowData.some((cell) => cell.toString().toLowerCase().includes(tag.toLowerCase())))
@@ -54,6 +56,7 @@ export function ScheduleDisplayPage() {
     }
 
     const onOpenDialog = () => {
+        setEditExamId(-1)
         setOpenDialog(true)
     }
 
@@ -64,6 +67,12 @@ export function ScheduleDisplayPage() {
     const onAddTag = (_: React.SyntheticEvent, tags: string[]) => {
         setFilterTags(tags)
         setSearchString("")
+    }
+
+
+    const onEditAction = (id: number) => {
+        setEditExamId(id)
+        setOpenDialog(true)
     }
 
 
@@ -106,7 +115,7 @@ export function ScheduleDisplayPage() {
                         )}
                     />
                 </div>
-                <CreationDialog open={openDialog} closeDialog={onCloseDialog}/>
+                <CreationDialog open={openDialog} closeDialog={onCloseDialog} editExamId={editExamId}/>
                 <div className="table-upper"
                      style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
                     <h1>Расписание сдач</h1>
@@ -118,14 +127,15 @@ export function ScheduleDisplayPage() {
                         </div>
                     }
                 </div>
-                <ExamDisplayTable data={searchFilter(tableData)} setData={setTableData} onPassedAction={addToPassed}/>
+                <ExamDisplayTable data={searchFilter(tableData)} setData={setTableData} onPassedAction={addToPassed}
+                                  onEditAction={onEditAction}/>
                 <Button className="show-passed-button" color={"inherit"} onClick={handleClick}>
                     <h1>Сдано</h1>
                     {openPassed ? <ExpandLess/> : <ExpandMore/>}
                 </Button>
                 <Collapse in={openPassed} timeout="auto" unmountOnExit>
                     <ExamDisplayTable data={searchFilter(passedData)} setData={setPassedData}
-                                      onPassedAction={addToUnpassed}/>
+                                      onPassedAction={addToUnpassed} onEditAction={onEditAction}/>
                 </Collapse>
             </div>
         </Layout>
