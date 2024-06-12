@@ -50,6 +50,8 @@ export const getExam = (id: number) => axiosService.get(`api/exams/${id}`)
 
 export const getRoleById = (id: number) => axiosService.get(`api/staffs/${id}/role`)
 
+export const getStaff = (id: number) => axiosService.get(`api/staffs/${id}`)
+
 export const login = (email: string, password: string) => axiosService.post(`api/login`, {email, password})
 
 export const deleteExam = (id: number) => axiosService.delete(`api/exams/${id}`)

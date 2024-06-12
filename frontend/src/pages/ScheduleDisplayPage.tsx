@@ -2,13 +2,14 @@ import {Layout} from "@shared/ui/layout/Layout.tsx";
 import {ExamDisplayTable} from "@widgets/ExamDisplayTable.tsx";
 import Button from "@mui/material/Button";
 import {ChangeEvent, useEffect, useState} from "react";
-import {getExams, getRoleById} from "@shared/services/axios.service.ts";
+import {getExams, getRoleById, getStaff} from "@shared/services/axios.service.ts";
 import {Exam} from "@entities/Exam.ts";
 import {Autocomplete, Chip, Collapse, TextField} from "@mui/material";
 import {ExpandLess, ExpandMore} from "@mui/icons-material";
 import moment from "moment/moment";
 import {CreationDialog} from "@widgets/CreationDialog.tsx";
 import {getMyId} from "@shared/services/localStorage.service.ts";
+import {Staff} from "@entities/LoginResponse.ts";
 
 
 // Page for schedule display
@@ -78,7 +79,13 @@ export function ScheduleDisplayPage() {
 
     useEffect(() => {
         getRoleById(Number(getMyId())).then(roleResponse => {
-            setForEmployee(["Админ", "Сотрудник"].includes(roleResponse.data))
+            const isEmployee = ["Админ", "Сотрудник"].includes(roleResponse.data)
+            setForEmployee(isEmployee)
+            if (isEmployee) return
+            getStaff(Number(getMyId())).then(response => {
+                const staff: Staff = response.data[0]
+                setFilterTags([`${staff.lastName} ${staff.firstName} ${staff.middleName}`])
+            })
         })
         getExams().then(r => {
             const responseData: Exam[] = r.data
@@ -97,6 +104,7 @@ export function ScheduleDisplayPage() {
                         options={[]}
                         freeSolo
                         onChange={onAddTag}
+                        value={filterTags}
                         renderTags={(value, getTagProps) =>
                             value.map((option, index) => (
                                 <Chip
