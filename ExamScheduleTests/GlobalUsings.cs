@@ -1,5 +1,5 @@
-// <copyright file="GlobalUsings.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
+// <copyright file="GlobalUsings.cs" company="Gleb Kargin">
+// Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
 #pragma warning disable SA1200

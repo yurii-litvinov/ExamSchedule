@@ -2,7 +2,10 @@
 // Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
-namespace TimetableAdapter.Models;
+namespace TimetableAdapter.Models.Educator;
+
+// ReSharper disable once RedundantNameQualifier
+using TimetableAdapter.Models.Classroom;
 
 /// <summary>
 /// Educator events day model.

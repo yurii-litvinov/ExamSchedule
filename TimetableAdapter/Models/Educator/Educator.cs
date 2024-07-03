@@ -2,7 +2,7 @@
 // Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
-namespace TimetableAdapter.Models;
+namespace TimetableAdapter.Models.Educator;
 
 /// <summary>
 /// Educator model.

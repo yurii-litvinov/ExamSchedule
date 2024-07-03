@@ -2,9 +2,12 @@
 // Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
-using TimetableAdapter.Models;
-
+// ReSharper disable RedundantNameQualifier
 namespace TimetableAdapter;
+
+using TimetableAdapter.Models.Classroom;
+using TimetableAdapter.Models.Educator;
+using TimetableAdapter.Models.Group;
 
 /// <summary>
 /// Timetable queries.
@@ -88,7 +91,6 @@ public class TimetableQueries
             return [];
         }
 
-        Console.WriteLine($"https://timetable.spbu.ru/api/v1/classrooms/{classroomId}/events/{startDate}/{endDate}/");
         var classroomTimetableResponseMessage =
             await client.GetAsync(
                 $"https://timetable.spbu.ru/api/v1/classrooms/{classroomId}/events/{startDate}/{endDate}/");
@@ -102,5 +104,36 @@ public class TimetableQueries
             await classroomTimetableResponseMessage.Content.ReadAsAsync<ClassroomTimetableResponse>();
 
         return classroomTimetable.ClassroomEventsDays;
+    }
+
+    /// <summary>
+    /// Gets group timetable.
+    /// </summary>
+    /// <param name="studentGroup">Student group.</param>
+    /// <param name="startDate">Start date.</param>
+    /// <returns>Returns group timetable.</returns>
+    public async Task<Day[]> GetGroupTimetable(string studentGroup, string startDate = "")
+    {
+        // Here should be used something like Redis to store key-value groups with their ids.
+        Dictionary<string, int> groupsIds = new() { { "21.Б10", 367320 } };
+        using var client = new HttpClient();
+
+        var groupId = groupsIds.FirstOrDefault(item => item.Key == studentGroup).Value;
+        if (groupId == 0)
+        {
+            return [];
+        }
+
+        var groupTimetableResponseMessage =
+            await client.GetAsync($"https://timetable.spbu.ru/api/v1/groups/{groupId}/events/{startDate}");
+
+        if (!groupTimetableResponseMessage.IsSuccessStatusCode)
+        {
+            return [];
+        }
+
+        var groupTimetable = await groupTimetableResponseMessage.Content.ReadAsAsync<GroupTimetableResponse>();
+
+        return groupTimetable.Days;
     }
 }
