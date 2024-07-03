@@ -10,8 +10,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExamScheduleTests", "ExamSc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimetableAdapter", "TimetableAdapter\TimetableAdapter.csproj", "{8B2348AF-A29E-400F-979A-F3D5D41E5AAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "test\test.csproj", "{CFF597CE-F0FF-459A-8B71-58F818D75210}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,9 +36,5 @@ Global
 		{8B2348AF-A29E-400F-979A-F3D5D41E5AAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B2348AF-A29E-400F-979A-F3D5D41E5AAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B2348AF-A29E-400F-979A-F3D5D41E5AAA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CFF597CE-F0FF-459A-8B71-58F818D75210}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CFF597CE-F0FF-459A-8B71-58F818D75210}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CFF597CE-F0FF-459A-8B71-58F818D75210}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CFF597CE-F0FF-459A-8B71-58F818D75210}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
