@@ -7,7 +7,7 @@ import {ChangeEvent, FormEvent, useEffect, useState} from "react";
 import {Moment} from "moment/moment";
 import {Exam, InputExam} from "@entities/Exam.ts";
 import {
-    getEducatorTimetable, getExam,
+    getEducatorTimetable, getExam, getGroupTimetable,
     getLocationTimetable,
     insertExam,
     updateExam
@@ -16,6 +16,7 @@ import {EducatorEventsDay} from "@entities/EducatorTimetable.ts";
 import styled from "@emotion/styled";
 import {ClassroomEventsDay} from "@entities/ClassroomTimetable.ts";
 import moment from "moment";
+import {GroupEventsDay} from "@entities/GroupTimetable.ts";
 
 
 interface DialogProps {
@@ -36,6 +37,7 @@ export const CreationDialog = ({open, closeDialog, editExamId = -1}: DialogProps
     const [examType, setExamType] = useState(editExam?.type ?? "");
     const [educatorTimetable, setEducatorTimetable] = useState<EducatorEventsDay[]>();
     const [locationTimetable, setLocationTimetable] = useState<ClassroomEventsDay[]>();
+    const [groupTimetable, setGroupTimetable] = useState<GroupEventsDay[]>();
     const [dayValue, setDayValue] = useState("0");
 
     const Item = styled(Paper)(() => ({
@@ -47,6 +49,11 @@ export const CreationDialog = ({open, closeDialog, editExamId = -1}: DialogProps
     }
 
     const onChangeStudentGroup = (event: ChangeEvent<HTMLInputElement>) => {
+        const startDate = moment(dateTime)
+        getGroupTimetable(event.target.value, startDate.format("YYYY-MM-DD")).then(response => {
+            const groupEventsDays: GroupEventsDay[] = response.data
+            setGroupTimetable(groupEventsDays)
+        })
         setStudentGroup(event.target.value)
     }
 
@@ -66,11 +73,14 @@ export const CreationDialog = ({open, closeDialog, editExamId = -1}: DialogProps
     // On changing datetime searches classroom timetable
     const onChangeDateTime = (value: Moment | null) => {
         setDateTime(value?.utc().format() ?? "")
-        const startDate = moment(dateTime)
-        const endDate = startDate.add(7, 'days')
-        getLocationTimetable(location, moment(dateTime).format("YYYYMMDDHHmm"), endDate.format("YYYYMMDDHHmm")).then(response => {
+        const endDate = moment(value?.utc().format() ?? "").add(7, 'days')
+        getLocationTimetable(location, moment(value?.utc().format() ?? "").format("YYYYMMDDHHmm"), endDate.format("YYYYMMDDHHmm")).then(response => {
             const classroomEventsDays: ClassroomEventsDay[] = response.data
             setLocationTimetable(classroomEventsDays)
+        })
+        getGroupTimetable(studentGroup, moment(value?.utc().format() ?? "").format("YYYY-MM-DD")).then(response => {
+            const groupEventsDays: GroupEventsDay[] = response.data
+            setGroupTimetable(groupEventsDays)
         })
     }
 
@@ -143,39 +153,68 @@ export const CreationDialog = ({open, closeDialog, editExamId = -1}: DialogProps
             justifyContent: "space-between",
             alignItems: "flex-start"
         }} onSubmit={onSubmit}>
-            <div className="student-block" style={{display: "flex", flexDirection: "column"}}>
-                <div className="label-form"
-                     style={{
-                         display: "flex",
-                         alignItems: "center",
-                         margin: "10px 0",
-                         justifyContent: "space-between"
-                     }}>
-                    <h3 style={{marginRight: "10px"}}>ФИО студента:</h3>
-                    <TextField className="student-initials-input" style={{width: "300px"}} required
-                               onChange={onChangeStudentInitials} value={studentInitials}/>
+            <div className="student-block"
+                 style={{width: "100%", display: "flex", justifyContent: "space-between", margin: "20px 0"}}>
+                <div className="student-forms" style={{display: "flex", flexDirection: "column"}}>
+                    <div className="label-form"
+                         style={{
+                             display: "flex",
+                             alignItems: "center",
+                             margin: "10px 0",
+                             justifyContent: "space-between"
+                         }}>
+                        <h3 style={{marginRight: "10px"}}>ФИО студента:</h3>
+                        <TextField className="student-initials-input" style={{width: "300px"}} required
+                                   onChange={onChangeStudentInitials} value={studentInitials}/>
+                    </div>
+                    <div className="label-form"
+                         style={{
+                             display: "flex",
+                             alignItems: "center",
+                             margin: "10px 0",
+                             justifyContent: "space-between"
+                         }}>
+                        <h3 style={{marginRight: "10px"}}>Группа:</h3>
+                        <TextField className="student-group-input" style={{width: "300px"}} required
+                                   onChange={onChangeStudentGroup} value={studentGroup}/>
+                    </div>
+                    <div className="label-form"
+                         style={{
+                             display: "flex",
+                             alignItems: "center",
+                             margin: "10px 0",
+                             justifyContent: "space-between"
+                         }}>
+                        <h3 style={{marginRight: "10px"}}>Дисциплина:</h3>
+                        <TextField className="exam-title-input" style={{width: "300px"}} required
+                                   onChange={onChangeTitle}
+                                   value={title}/>
+                    </div>
                 </div>
-                <div className="label-form"
-                     style={{
-                         display: "flex",
-                         alignItems: "center",
-                         margin: "10px 0",
-                         justifyContent: "space-between"
-                     }}>
-                    <h3 style={{marginRight: "10px"}}>Группа:</h3>
-                    <TextField className="student-group-input" style={{width: "300px"}} required
-                               onChange={onChangeStudentGroup} value={studentGroup}/>
-                </div>
-                <div className="label-form"
-                     style={{
-                         display: "flex",
-                         alignItems: "center",
-                         margin: "10px 0",
-                         justifyContent: "space-between"
-                     }}>
-                    <h3 style={{marginRight: "10px"}}>Дисциплина:</h3>
-                    <TextField className="exam-title-input" style={{width: "300px"}} required onChange={onChangeTitle}
-                               value={title}/>
+
+                <div className="group-timetable"
+                     style={{alignSelf: "flex-start", flexBasis: "50%", display: "flex", flexDirection: "column"}}>
+                    {
+                        (groupTimetable?.length ?? 0) > 0 && groupTimetable &&
+                        <>
+                            <Select value={dayValue} onChange={onDayValueChange}>
+                                {groupTimetable.map((eventsDay, index) => <MenuItem
+                                    value={index}>{eventsDay.dayString}</MenuItem>)}
+                            </Select>
+                            <Grid container spacing={2}>
+                                {groupTimetable[+dayValue].dayStudyEvents.map(studyEvent =>
+                                    <Grid item width={"100%"}>
+                                        <Item>
+                                            {studyEvent.subject}<br/>
+                                            Время: {studyEvent.timeIntervalString}<br/>
+                                            Даты: {studyEvent.locationsDisplayText} <br/>
+                                            Преподаватель: {studyEvent.educatorsDisplayText}
+                                        </Item>
+                                    </Grid>)}
+                            </Grid>
+                        </>
+                    }
+
                 </div>
             </div>
 
@@ -230,7 +269,8 @@ export const CreationDialog = ({open, closeDialog, editExamId = -1}: DialogProps
                         <h3 style={{marginRight: "10px"}}>Дата и время проведения:</h3>
                         <LocalizationProvider dateAdapter={AdapterMoment}>
                             <DesktopDateTimePicker className="dadatetime-input" ampm={false}
-                                                   onChange={onChangeDateTime} value={moment(dateTime)}/>
+                                                   onChange={onChangeDateTime} value={moment(dateTime)}
+                                                   format={"DD.MM.YYYY HH:mm"}/>
                         </LocalizationProvider>
                     </div>
                     <div className="label-form"
@@ -268,7 +308,6 @@ export const CreationDialog = ({open, closeDialog, editExamId = -1}: DialogProps
                             </Grid>
                         </>
                     }
-
                 </div>
             </div>
             <div className="buttons" style={{alignSelf: "flex-end"}}>
