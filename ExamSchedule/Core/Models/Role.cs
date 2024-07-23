@@ -18,6 +18,7 @@ public sealed class Role
     /// </summary>
     [Key]
     [Column("role_id")]
+    [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public int RoleId { get; set; }
 
     /// <summary>
