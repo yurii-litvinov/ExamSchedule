@@ -58,7 +58,7 @@ public class AuthenticationServiceTests
     public void AccessTokensAreNotEqualTest()
     {
         var firstToken = AuthenticationService.GetAccessToken(this.jwtOptions, this.staff, DbContext);
-        Thread.Sleep(500);
+        Thread.Sleep(2000);
         var secondToken = AuthenticationService.GetAccessToken(this.jwtOptions, this.staff, DbContext);
         Assert.That(firstToken, Is.Not.EqualTo(secondToken));
     }
