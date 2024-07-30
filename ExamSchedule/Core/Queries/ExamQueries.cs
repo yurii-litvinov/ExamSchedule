@@ -279,7 +279,7 @@ public class ExamQueries(ScheduleContext context)
                 DateTime = exam.DateTime,
                 Lecturers = exam.Lecturers.Select(
                     lecturer =>
-                        $"{lecturer.LastName} {lecturer.FirstName.FirstOrDefault()} {lecturer.MiddleName.FirstOrDefault()}"),
+                        $"{lecturer.LastName} {lecturer.FirstName.FirstOrDefault()}. {lecturer.MiddleName.FirstOrDefault()}."),
                 Location = exam.Classroom,
                 StudentGroup = exam.StudentGroup,
                 StudentInitials = exam.StudentInitials,

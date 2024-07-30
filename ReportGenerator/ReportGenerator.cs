@@ -7,6 +7,7 @@ namespace ReportGenerator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -24,8 +25,10 @@ public class ReportGenerator
     /// <exception cref="Exception">Tags for repeat not found.</exception>
     public Stream GenerateReport(IEnumerable<ExamDto> examDtos)
     {
-        var templatePath = "../ReportGenerator/report-template.docx";
-        var outputPath = "../ReportGenerator/generated-report.docx";
+        const string templatePath = "../ReportGenerator/report-template.docx";
+        Console.WriteLine($"Template Path: {Path.GetFullPath(templatePath)}");
+        Console.WriteLine($"{Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}");
+        const string outputPath = "../ReportGenerator/generated-report.docx";
 
         var data = (from exam in examDtos
             let lecturers = string.Join(", ", exam.Lecturers)
@@ -34,7 +37,7 @@ public class ReportGenerator
                 { "Name", exam.StudentInitials },
                 { "Group", exam.StudentGroup },
                 { "Exam", exam.Title },
-                { "Datetime", $"{exam.DateTime:g}" },
+                { "Datetime", $"{exam.DateTime.ToLocalTime():g}" },
                 { "Location", exam.Location },
                 { "Lecturer", lecturers },
             }).ToList();
