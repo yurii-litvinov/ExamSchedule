@@ -75,4 +75,16 @@ public class AuthenticationServiceTests
                     string.Empty;
         Assert.That(email, Is.EqualTo(this.staff.Email));
     }
+
+    /// <summary>
+    /// Refresh tokens are not equal test.
+    /// </summary>
+    [Test]
+    [Order(4)]
+    public void RefreshTokensAreNotEqualTest()
+    {
+        var firstToken = AuthenticationService.GenerateRefreshToken();
+        var secondToken = AuthenticationService.GenerateRefreshToken();
+        Assert.That(firstToken, Is.Not.EqualTo(secondToken));
+    }
 }

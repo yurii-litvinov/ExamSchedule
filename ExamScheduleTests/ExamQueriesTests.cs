@@ -55,10 +55,38 @@ public class ExamQueriesTests
     };
 
     /// <summary>
-    /// Insert exam test.
+    /// Insert exam with non-existing student test.
     /// </summary>
     [Test]
     [Order(1)]
+    public void InsertExamWithNonExistingStudentTest()
+    {
+        _ = new LecturerQueries(DbContext).InsertLecturer(InputLecturer).Result;
+        _ = new LocationQueries(DbContext).InsertLocation(InputLocation).Result;
+        DbContext.ExamTypes.Add(new ExamType() { Title = "Комиссия" });
+        DbContext.SaveChanges();
+        Assert.DoesNotThrowAsync(() => Queries.InsertExam(InputExam));
+    }
+
+    /// <summary>
+    /// Insert exam with non-existing location test.
+    /// </summary>
+    [Test]
+    [Order(2)]
+    public void InsertExamWithNonExistingLocationTest()
+    {
+        _ = new LecturerQueries(DbContext).InsertLecturer(InputLecturer).Result;
+        _ = new StudentQueries(DbContext).InsertStudent(InputStudent).Result;
+        DbContext.ExamTypes.Add(new ExamType() { Title = "Комиссия" });
+        DbContext.SaveChanges();
+        Assert.DoesNotThrowAsync(() => Queries.InsertExam(InputExam));
+    }
+
+    /// <summary>
+    /// Insert exam test.
+    /// </summary>
+    [Test]
+    [Order(3)]
     public void InsertExamTest()
     {
         _ = new LecturerQueries(DbContext).InsertLecturer(InputLecturer).Result;
@@ -110,6 +138,63 @@ public class ExamQueriesTests
                     Assert.That(examLecturerIds[i], Is.EqualTo(lecturerIds[i]));
                 }
             });
+    }
+
+    /// <summary>
+    /// Update exam with non-existing student test.
+    /// </summary>
+    [Test]
+    [Order(5)]
+    public void UpdateExamWithNonExistingStudentTest()
+    {
+        var exam = Queries.GetExams().Result.Last();
+        var id = (int)(exam.GetType().GetProperties().First(prop => prop.Name == "ExamId").GetValue(exam) ?? 0);
+
+        InputStudent newInputStudent = new()
+        {
+            FirstName = "ivan",
+            LastName = "ivanov",
+            MiddleName = "ivanevich",
+            StudentGroup = "22.Б22",
+        };
+
+        var newInputExam = new InputExam()
+        {
+            Title = "d",
+            Type = InputExam.Type,
+            StudentInitials = $"{newInputStudent.LastName} {newInputStudent.FirstName} {newInputStudent.MiddleName}",
+            StudentGroup = newInputStudent.StudentGroup,
+            Classroom = InputLocation.Classroom,
+            LecturersInitials = InputExam.LecturersInitials,
+        };
+        Assert.DoesNotThrowAsync(() => Queries.UpdateExam(id, newInputExam));
+    }
+
+    /// <summary>
+    /// Update exam with non-existing location test.
+    /// </summary>
+    [Test]
+    [Order(4)]
+    public void UpdateExamWithNonExistingLocationTest()
+    {
+        var exam = Queries.GetExams().Result.Last();
+        var id = (int)(exam.GetType().GetProperties().First(prop => prop.Name == "ExamId").GetValue(exam) ?? 0);
+
+        InputLocation newInputLocation = new()
+        {
+            Classroom = "5555",
+        };
+
+        var newInputExam = new InputExam()
+        {
+            Title = "d",
+            Type = InputExam.Type,
+            StudentInitials = InputExam.StudentInitials,
+            StudentGroup = InputExam.StudentGroup,
+            Classroom = newInputLocation.Classroom,
+            LecturersInitials = InputExam.LecturersInitials,
+        };
+        Assert.DoesNotThrowAsync(() => Queries.UpdateExam(id, newInputExam));
     }
 
     /// <summary>
@@ -198,7 +283,7 @@ public class ExamQueriesTests
     /// Delete exam test.
     /// </summary>
     [Test]
-    [Order(4)]
+    [Order(6)]
     public void DeleteExamTest()
     {
         var exam = Queries.GetExams().Result.Last();

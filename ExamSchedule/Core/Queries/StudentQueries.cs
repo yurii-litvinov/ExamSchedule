@@ -4,6 +4,7 @@
 
 namespace ExamSchedule.Core.Queries;
 
+// ReSharper disable once RedundantNameQualifier
 using ExamSchedule.Core.Models;
 using Microsoft.EntityFrameworkCore;
 

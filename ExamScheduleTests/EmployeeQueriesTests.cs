@@ -7,6 +7,7 @@ namespace ExamScheduleTests;
 using ExamSchedule.Core;
 using ExamSchedule.Core.Models;
 using ExamSchedule.Core.Queries;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>
@@ -31,10 +32,46 @@ public class EmployeeQueriesTests
     };
 
     /// <summary>
-    /// Insert employee test.
+    /// Insert employee with empty password test.
     /// </summary>
     [Test]
     [Order(1)]
+    public void InsertEmployeeWithEmptyPasswordTest()
+    {
+        var employeeWithoutPassword = new InputStaffWithoutRole()
+        {
+            Email = "test@test.ru",
+            FirstName = "tester",
+            LastName = "testov",
+            MiddleName = "testevich",
+            Password = string.Empty,
+        };
+        Assert.That(Queries.InsertEmployee(employeeWithoutPassword).Result, Is.InstanceOf<BadRequest<string>>());
+    }
+
+    /// <summary>
+    /// Insert employee with empty email test.
+    /// </summary>
+    [Test]
+    [Order(2)]
+    public void InsertEmployeeWithEmptyEmailTest()
+    {
+        var employeeWithoutPassword = new InputStaffWithoutRole()
+        {
+            Email = string.Empty,
+            FirstName = "tester",
+            LastName = "testov",
+            MiddleName = "testevich",
+            Password = "password",
+        };
+        Assert.That(Queries.InsertEmployee(employeeWithoutPassword).Result, Is.InstanceOf<BadRequest<string>>());
+    }
+
+    /// <summary>
+    /// Insert employee test.
+    /// </summary>
+    [Test]
+    [Order(3)]
     public void InsertEmployeeTest()
     {
         Assert.DoesNotThrowAsync(() => Queries.InsertEmployee(InputEmployee));
@@ -44,7 +81,7 @@ public class EmployeeQueriesTests
     /// Get employee test.
     /// </summary>
     [Test]
-    [Order(2)]
+    [Order(4)]
     public void GetEmployeeTest()
     {
         var id = Queries.GetEmployees().Result.Last(employee => employee.Email == InputEmployee.Email).StaffId;

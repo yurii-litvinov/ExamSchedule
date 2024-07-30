@@ -2,11 +2,14 @@
 // Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
-// ReSharper disable RedundantNameQualifier
 namespace ExamSchedule.Core.Queries;
 
+// ReSharper disable once RedundantNameQualifier
 using ExamSchedule.Core.Models;
 using Microsoft.EntityFrameworkCore;
+
+// ReSharper disable RedundantNameQualifier
+using ReportGenerator;
 
 /// <summary>
 /// Exam queries.
@@ -242,5 +245,58 @@ public class ExamQueries(ScheduleContext context)
 
         await context.SaveChangesAsync();
         return Results.Ok();
+    }
+
+    /// <summary>
+    /// Gets exam dto.
+    /// </summary>
+    /// <param name="id">Exam id.</param>
+    /// <returns>List of exams.</returns>
+    public ExamDto? GetExamDto(int id)
+    {
+        var queryable = (from exam in context.Exams
+            select new
+            {
+                exam.ExamId,
+                StudentInitials = $"{exam.Student.LastName} {exam.Student.FirstName} {exam.Student.MiddleName}",
+                exam.Title,
+                exam.Student.StudentGroup,
+                Type = exam.Type.Title,
+                exam.DateTime,
+                exam.IsPassed,
+                exam.Location.Classroom,
+                Lecturers = context.ExamLecturers.Where(examLecturer => examLecturer.ExamId == exam.ExamId)
+                    .Select(examLecturer => examLecturer.Lecturer)
+                    .ToList(),
+                exam.TypeId,
+                exam.StudentId,
+                exam.LocationId,
+            }).Where(exam => exam.ExamId == id);
+
+        var result = queryable.Select(
+            exam => new ExamDto()
+            {
+                DateTime = exam.DateTime,
+                Lecturers = exam.Lecturers.Select(
+                    lecturer =>
+                        $"{lecturer.LastName} {lecturer.FirstName.FirstOrDefault()} {lecturer.MiddleName.FirstOrDefault()}"),
+                Location = exam.Classroom,
+                StudentGroup = exam.StudentGroup,
+                StudentInitials = exam.StudentInitials,
+                Title = exam.Title,
+                TypeTitle = exam.Type,
+            }).FirstOrDefault();
+
+        return result;
+    }
+
+    /// <summary>
+    /// Get from exam ids exam dtos.
+    /// </summary>
+    /// <param name="examIds">Exam ids.</param>
+    /// <returns>Returns exam dtos.</returns>
+    public IEnumerable<ExamDto> GetFromIdsDtos(IEnumerable<int> examIds)
+    {
+        return examIds.Select(this.GetExamDto).OfType<ExamDto>().ToList();
     }
 }

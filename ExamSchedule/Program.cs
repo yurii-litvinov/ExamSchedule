@@ -8,6 +8,7 @@ using ExamSchedule;
 using ExamSchedule.Core;
 using ExamSchedule.Core.Auth;
 using ExamSchedule.Core.Models.Auth;
+using ExamSchedule.Core.Queries;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -114,6 +115,18 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseCors("CorsPolicy");
+
+app.MapPost(
+    "api/report",
+    (ScheduleContext context, List<int> examIds) =>
+    {
+        var queries = new ExamQueries(context);
+        var examDtos = queries.GetFromIdsDtos(examIds);
+        var reportGenerator = new ReportGenerator.ReportGenerator();
+        var stream = reportGenerator.GenerateReport(examDtos);
+        var result = Results.File(stream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        return result;
+    });
 
 app.MapPost(
     "api/login/",
