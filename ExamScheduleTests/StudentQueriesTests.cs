@@ -21,12 +21,19 @@ public class StudentQueriesTests
     private static readonly ScheduleContext DbContext = new(Options);
     private static readonly StudentQueries Queries = new(DbContext);
 
-    private static readonly Student InputStudent = new()
+    private static readonly StudentGroup Group = new StudentGroup()
+    {
+        Oid = 12345,
+        Title = "group2",
+        Description = "the best group in the world 1.2.3",
+    };
+
+    private static readonly InputStudent InputStudent = new()
     {
         FirstName = "stud",
         LastName = "studov",
         MiddleName = "studevich",
-        StudentGroup = "group",
+        StudentGroup = Group.Title,
     };
 
     /// <summary>
@@ -36,6 +43,8 @@ public class StudentQueriesTests
     [Order(1)]
     public void InsertStudentTest()
     {
+        DbContext.StudentsGroups.Add(Group);
+        DbContext.SaveChanges();
         Assert.DoesNotThrowAsync(() => Queries.InsertStudent(InputStudent));
     }
 
@@ -50,7 +59,7 @@ public class StudentQueriesTests
             student =>
                 student.LastName == InputStudent.LastName && student.FirstName == InputStudent.FirstName &&
                 student.MiddleName == InputStudent.MiddleName &&
-                student.StudentGroup == InputStudent.StudentGroup).StudentId;
+                student.StudentGroupOid == Group.Oid).StudentId;
         var student = Queries.GetStudents(id).Result.First();
         Assert.Multiple(
             () =>
@@ -58,7 +67,7 @@ public class StudentQueriesTests
                 Assert.That(student.FirstName, Is.EqualTo(InputStudent.FirstName));
                 Assert.That(student.LastName, Is.EqualTo(InputStudent.LastName));
                 Assert.That(student.MiddleName, Is.EqualTo(InputStudent.MiddleName));
-                Assert.That(student.StudentGroup, Is.EqualTo(InputStudent.StudentGroup));
+                Assert.That(student.StudentGroupOid, Is.EqualTo(Group.Oid));
             });
     }
 
@@ -73,14 +82,14 @@ public class StudentQueriesTests
             student =>
                 student.LastName == InputStudent.LastName && student.FirstName == InputStudent.FirstName &&
                 student.MiddleName == InputStudent.MiddleName &&
-                student.StudentGroup == InputStudent.StudentGroup).StudentId;
+                student.StudentGroupOid == Group.Oid).StudentId;
 
         var newStudent = new InputStudent()
         {
             FirstName = "Ivan",
             LastName = "Ivanov",
             MiddleName = "Ivanovich",
-            StudentGroup = "22.Б22",
+            StudentGroup = Group.Title,
         };
         Assert.DoesNotThrowAsync(() => Queries.UpdateStudent(id, newStudent));
 
@@ -91,7 +100,7 @@ public class StudentQueriesTests
                 Assert.That(student.FirstName, Is.EqualTo(newStudent.FirstName));
                 Assert.That(student.LastName, Is.EqualTo(newStudent.LastName));
                 Assert.That(student.MiddleName, Is.EqualTo(newStudent.MiddleName));
-                Assert.That(student.StudentGroup, Is.EqualTo(newStudent.StudentGroup));
+                Assert.That(student.StudentGroupOid, Is.EqualTo(Group.Oid));
                 Assert.DoesNotThrowAsync(() => Queries.UpdateStudent(id, InputStudent));
             });
     }
@@ -107,7 +116,7 @@ public class StudentQueriesTests
             student =>
                 student.LastName == InputStudent.LastName && student.FirstName == InputStudent.FirstName &&
                 student.MiddleName == InputStudent.MiddleName &&
-                student.StudentGroup == InputStudent.StudentGroup).StudentId;
+                student.StudentGroupOid == Group.Oid).StudentId;
 
         Assert.DoesNotThrowAsync(() => Queries.DeleteStudent(id));
 

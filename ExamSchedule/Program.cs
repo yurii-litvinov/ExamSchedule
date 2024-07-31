@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
+Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "false");
 var builder = WebApplication.CreateBuilder(args);
 
 // Get JWT options from appsettings
@@ -198,6 +199,15 @@ app.MapPut(
             tableFile.OpenReadStream());
         return task.Result;
     }).RequireAuthorization();
+
+// Student group Endpoint
+app.MapGet(
+    "api/student_group/{group}",
+    (ScheduleContext context, string group) =>
+    {
+        var studentGroup = context.StudentsGroups.FirstOrDefault(studentGroup => studentGroup.Title == group);
+        return studentGroup;
+    });
 
 // Exam Endpoints
 app.MapGroup("api/exams/").ExamGroup().WithTags("Exams").RequireAuthorization();

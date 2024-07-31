@@ -31,12 +31,19 @@ public class ExamQueriesTests
         Password = "lectorpass",
     };
 
+    private static readonly StudentGroup Group = new StudentGroup()
+    {
+        Oid = 11111,
+        Title = "group",
+        Description = "the best group in the world 1.2.3",
+    };
+
     private static readonly InputStudent InputStudent = new()
     {
         FirstName = "stud",
         LastName = "studov",
         MiddleName = "studevich",
-        StudentGroup = "22.Б22",
+        StudentGroup = Group.Title,
     };
 
     private static readonly InputLocation InputLocation = new()
@@ -61,6 +68,7 @@ public class ExamQueriesTests
     [Order(1)]
     public void InsertExamWithNonExistingStudentTest()
     {
+        DbContext.StudentsGroups.Add(Group);
         _ = new LecturerQueries(DbContext).InsertLecturer(InputLecturer).Result;
         _ = new LocationQueries(DbContext).InsertLocation(InputLocation).Result;
         DbContext.ExamTypes.Add(new ExamType() { Title = "Комиссия" });
@@ -155,7 +163,7 @@ public class ExamQueriesTests
             FirstName = "ivan",
             LastName = "ivanov",
             MiddleName = "ivanevich",
-            StudentGroup = "22.Б22",
+            StudentGroup = Group.Title,
         };
 
         var newInputExam = new InputExam()
@@ -221,7 +229,7 @@ public class ExamQueriesTests
             FirstName = "ivan",
             LastName = "ivanov",
             MiddleName = "ivanevich",
-            StudentGroup = "22.Б22",
+            StudentGroup = Group.Title,
         };
 
         InputLocation newInputLocation = new()

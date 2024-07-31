@@ -12,14 +12,23 @@ create table Exam_Type
     CONSTRAINT Exam_Type_PK PRIMARY KEY (Exam_Type_ID)
 );
 
+create table Student_Group
+(
+    Oid         int          not null,
+    Title       varchar(20)  not null,
+    Description varchar(150) not null,
+    CONSTRAINT Student_Group_PK PRIMARY KEY (Oid)
+);
+
 create table Student
 (
     Student_ID    int         not null GENERATED ALWAYS AS IDENTITY,
     First_Name    varchar(20) not null,
     Last_Name     varchar(20) not null,
     Middle_Name   varchar(20) not null,
-    Student_Group varchar(10) not null,
-    CONSTRAINT Student_PK PRIMARY KEY (Student_ID)
+    Student_Group int         not null,
+    CONSTRAINT Student_PK PRIMARY KEY (Student_ID),
+    CONSTRAINT Student_Group_PK FOREIGN KEY (Student_Group) REFERENCES Student_Group (Oid)
 );
 
 create table Role
@@ -101,8 +110,11 @@ values (1, 'Пересдача');
 insert into Exam_Type(Exam_Type_ID, Title)
 values (2, 'Комиссия');
 
+insert into Student_Group(Oid, Title, Description)
+VALUES (367320, '21.Б10', '02.03.03 «Математическое обеспечение и администрирование информационных систем»');
+
 insert into Student(First_Name, Last_Name, Middle_Name, Student_Group)
-VALUES ('Аноним', 'Анонимов', 'Анонимович', '22.Б22');
+VALUES ('Аноним', 'Анонимов', 'Анонимович', 367320);
 
 insert into Staff(First_Name, Last_Name, Middle_Name, Role_ID, Email, Password)
 values ('Лектор', 'Лекторов', 'Лекторович', 2, 'lektor@mail.ru',

@@ -35,6 +35,11 @@ public class ExamDto
     public string StudentGroup { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets student group description.
+    /// </summary>
+    public string StudentGroupDescription { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets type.
     /// </summary>
     public string TypeTitle { get; set; } = string.Empty;

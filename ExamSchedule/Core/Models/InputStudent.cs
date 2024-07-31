@@ -13,10 +13,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 public class InputStudent
 {
     /// <summary>
-    /// Gets or sets StudentGroup column.
+    /// Gets or sets StudentGroup.
     /// </summary>
-    [MaxLength(10)]
-    [Column("student_group")]
     public string StudentGroup { get; set; } = string.Empty;
 
     /// <summary>

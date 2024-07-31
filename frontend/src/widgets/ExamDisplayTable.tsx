@@ -22,7 +22,7 @@ interface TableProps {
 // Table for exam display
 export const ExamDisplayTable = ({data, setData, onPassedAction, onEditAction, selected, setSelected}: TableProps) => {
     moment.locale('ru')
-    const headers = useMemo(() => ["", "Id", "Студент", "Дисциплина", "Группа", "Тип", "Место проведения", "Дата", "Преподаватели","Cдан/не сдан", "", ""], [])
+    const headers = useMemo(() => ["", "Id", "Студент", "Дисциплина", "Группа", "Тип", "Место проведения", "Дата", "Преподаватели", "Cдан/не сдан", "", ""], [])
     const onCheckboxClick = (event: React.ChangeEvent<HTMLInputElement>, element: number) => {
         if (event.target.checked) {
             setSelected([element, ...selected])
@@ -52,7 +52,7 @@ export const ExamDisplayTable = ({data, setData, onPassedAction, onEditAction, s
             title: exam.title,
             type: exam.type,
             studentInitials: exam.studentInitials,
-            studentGroup: exam.studentGroup,
+            studentGroup: exam.studentGroup.title,
             classroom: exam.classroom,
             dateTime: exam.dateTime,
             lecturersInitials: exam.lecturers.map(lecturer => `${lecturer.lastName} ${lecturer.firstName} ${lecturer.middleName}`)
@@ -82,7 +82,7 @@ export const ExamDisplayTable = ({data, setData, onPassedAction, onEditAction, s
                             <TableCell key={rowIndex + ".box"} align={"center"}>
                                 <Checkbox onChange={event => onCheckboxClick(event, row.examId)}/>
                             </TableCell>
-                            {[row.examId, row.studentInitials, row.title, row.studentGroup, row.type, row.classroom,
+                            {[row.examId, row.studentInitials, row.title, row.studentGroup.title, row.type, row.classroom,
                                 moment(row.dateTime).format("DD.MM.YYYY HH:mm"), row.lecturers.map(l => `${l.lastName} ${l.firstName} ${l.middleName}`).join(", ")]
                                 .map((cell, cellIndex) =>
                                     <TableCell key={rowIndex + "." + cellIndex} align={"center"}

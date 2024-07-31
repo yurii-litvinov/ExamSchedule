@@ -170,8 +170,8 @@ public static class EndpointGroups
                 new TimetableQueries().GetClassroomsTimetable(location, startDate, endDate));
         group.MapGet(
             "/group/",
-            (string studentGroup, string startDate) =>
-                new TimetableQueries().GetGroupTimetable(studentGroup, startDate));
+            (int studentGroupOid, string startDate) =>
+                new TimetableQueries().GetGroupTimetable(studentGroupOid, startDate));
 
         return group;
     }

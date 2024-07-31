@@ -24,12 +24,14 @@ public class ExamQueries(ScheduleContext context)
     public async Task<IEnumerable<object>> GetExams(int? id = null)
     {
         var result = from exam in context.Exams
+            let studentGroup =
+                context.StudentsGroups.First(studentGroup => studentGroup.Oid == exam.Student.StudentGroupOid)
             select new
             {
                 exam.ExamId,
                 StudentInitials = $"{exam.Student.LastName} {exam.Student.FirstName} {exam.Student.MiddleName}",
                 exam.Title,
-                exam.Student.StudentGroup,
+                StudentGroup = studentGroup,
                 Type = exam.Type.Title,
                 exam.DateTime,
                 exam.IsPassed,
@@ -67,11 +69,12 @@ public class ExamQueries(ScheduleContext context)
             .ToList();
 
         var typeId = context.ExamTypes.First(examType => examType.Title == inputExam.Type).ExamTypeId;
+        var groupOid = context.StudentsGroups.FirstOrDefault(group => group.Title == inputExam.StudentGroup)?.Oid ?? 0;
         var studentId = context.Students.FirstOrDefault(
             student =>
                 (student.LastName + " " + student.FirstName + " " + student.MiddleName).Trim() ==
                 inputExam.StudentInitials &&
-                student.StudentGroup == inputExam.StudentGroup)?.StudentId;
+                student.StudentGroupOid == groupOid)?.StudentId;
         if (studentId == null)
         {
             var initials = inputExam.StudentInitials.Split();
@@ -147,11 +150,13 @@ public class ExamQueries(ScheduleContext context)
 
         if (!string.IsNullOrEmpty(inputExam.StudentInitials) && !string.IsNullOrEmpty(inputExam.StudentGroup))
         {
+            var groupOid = context.StudentsGroups.FirstOrDefault(group => group.Title == inputExam.StudentGroup)?.Oid ??
+                           0;
             var studentId = context.Students.FirstOrDefault(
                 student =>
                     (student.LastName + " " + student.FirstName + " " + student.MiddleName).Trim() ==
                     inputExam.StudentInitials &&
-                    student.StudentGroup == inputExam.StudentGroup)?.StudentId;
+                    student.StudentGroupOid == groupOid)?.StudentId;
             if (studentId == null)
             {
                 var initials = inputExam.StudentInitials.Split();
@@ -260,7 +265,7 @@ public class ExamQueries(ScheduleContext context)
                 exam.ExamId,
                 StudentInitials = $"{exam.Student.LastName} {exam.Student.FirstName} {exam.Student.MiddleName}",
                 exam.Title,
-                exam.Student.StudentGroup,
+                exam.Student.StudentGroupOid,
                 Type = exam.Type.Title,
                 exam.DateTime,
                 exam.IsPassed,
@@ -281,7 +286,9 @@ public class ExamQueries(ScheduleContext context)
                     lecturer =>
                         $"{lecturer.LastName} {lecturer.FirstName.FirstOrDefault()}. {lecturer.MiddleName.FirstOrDefault()}."),
                 Location = exam.Classroom,
-                StudentGroup = exam.StudentGroup,
+                StudentGroup = context.StudentsGroups.First(group => group.Oid == exam.StudentGroupOid).Title,
+                StudentGroupDescription =
+                    context.StudentsGroups.First(group => group.Oid == exam.StudentGroupOid).Description,
                 StudentInitials = exam.StudentInitials,
                 Title = exam.Title,
                 TypeTitle = exam.Type,

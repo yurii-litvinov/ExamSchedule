@@ -7,7 +7,6 @@ namespace ReportGenerator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -30,10 +29,13 @@ public class ReportGenerator
 
         var data = (from exam in examDtos
             let lecturers = string.Join(", ", exam.Lecturers)
+            let course = ((DateTime.Now - DateTime.Parse($"01/09/20{exam.StudentGroup[..2]}")).Days / 365) + 1
             select new Dictionary<string, string>
             {
                 { "Name", exam.StudentInitials },
                 { "Group", exam.StudentGroup },
+                { "Course", course.ToString() },
+                { "Speciality", exam.StudentGroupDescription },
                 { "Exam", exam.Title },
                 { "Datetime", $"{exam.DateTime.ToLocalTime():g}" },
                 { "Location", exam.Location },

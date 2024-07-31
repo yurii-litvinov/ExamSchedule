@@ -14,11 +14,17 @@ export interface Exam {
     title: string;
     type: string;
     studentInitials: string;
-    studentGroup: string;
+    studentGroup: StudentGroup;
     classroom: string;
     dateTime: string;
     isPassed: boolean;
     lecturers: Lecturer[];
+}
+
+export interface StudentGroup {
+    oid: number;
+    title: string;
+    description: string;
 }
 
 

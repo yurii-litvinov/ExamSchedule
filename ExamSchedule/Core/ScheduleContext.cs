@@ -57,6 +57,11 @@ public class ScheduleContext : DbContext
     /// </summary>
     public virtual DbSet<Student> Students { get; set; } = null!;
 
+    /// <summary>
+    /// Gets or sets Student_Group table.
+    /// </summary>
+    public virtual DbSet<StudentGroup> StudentsGroups { get; set; } = null!;
+
     /// <inheritdoc/>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

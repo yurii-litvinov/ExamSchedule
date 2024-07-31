@@ -109,23 +109,15 @@ public class TimetableQueries
     /// <summary>
     /// Gets group timetable.
     /// </summary>
-    /// <param name="studentGroup">Student group.</param>
+    /// <param name="studentGroupOid">Student group oid.</param>
     /// <param name="startDate">Start date.</param>
     /// <returns>Returns group timetable.</returns>
-    public async Task<Day[]> GetGroupTimetable(string studentGroup, string startDate = "")
+    public async Task<Day[]> GetGroupTimetable(int studentGroupOid, string startDate = "")
     {
-        // Here should be used something like Redis to store key-value groups with their ids.
-        Dictionary<string, int> groupsIds = new() { { "21.Б10", 367320 } };
         using var client = new HttpClient();
 
-        var groupId = groupsIds.FirstOrDefault(item => item.Key == studentGroup).Value;
-        if (groupId == 0)
-        {
-            return [];
-        }
-
         var groupTimetableResponseMessage =
-            await client.GetAsync($"https://timetable.spbu.ru/api/v1/groups/{groupId}/events/{startDate}");
+            await client.GetAsync($"https://timetable.spbu.ru/api/v1/groups/{studentGroupOid}/events/{startDate}");
 
         if (!groupTimetableResponseMessage.IsSuccessStatusCode)
         {

@@ -5,9 +5,12 @@ import {AdapterMoment} from "@mui/x-date-pickers/AdapterMoment";
 import MenuItem from "@mui/material/MenuItem";
 import {ChangeEvent, FormEvent, useEffect, useState} from "react";
 import {Moment} from "moment/moment";
-import {Exam, InputExam} from "@entities/Exam.ts";
+import {Exam, InputExam, StudentGroup} from "@entities/Exam.ts";
 import {
-    getEducatorTimetable, getExam, getGroupTimetable,
+    getEducatorTimetable,
+    getExam,
+    getGroupByTitle,
+    getGroupTimetable,
     getLocationTimetable,
     insertExam,
     updateExam
@@ -29,7 +32,7 @@ interface DialogProps {
 export const CreationDialog = ({open, closeDialog, editExamId = -1}: DialogProps) => {
     const [editExam, setEditExam] = useState<Exam>();
     const [studentInitials, setStudentInitials] = useState(editExam?.studentInitials ?? "");
-    const [studentGroup, setStudentGroup] = useState(editExam?.studentGroup ?? "");
+    const [studentGroup, setStudentGroup] = useState(editExam?.studentGroup.title ?? "");
     const [title, setTitle] = useState(editExam?.title ?? "");
     const [lecturerInitials, setLecturerInitials] = useState("");
     const [dateTime, setDateTime] = useState(moment(editExam?.dateTime).utc().format() ?? moment().utc().format());
@@ -44,17 +47,25 @@ export const CreationDialog = ({open, closeDialog, editExamId = -1}: DialogProps
         backgroundColor: '#fff',
     }));
 
+    const getGroupOid = async (group: string) => {
+        const response = await getGroupByTitle(group).catch(() => null);
+        const groupResponse: StudentGroup = response?.data
+        return groupResponse?.oid
+    }
+
     const onChangeStudentInitials = (event: ChangeEvent<HTMLInputElement>) => {
         setStudentInitials(event.target.value)
     }
 
-    const onChangeStudentGroup = (event: ChangeEvent<HTMLInputElement>) => {
+    const onChangeStudentGroup = async (event: ChangeEvent<HTMLInputElement>) => {
         const startDate = moment(dateTime)
-        getGroupTimetable(event.target.value, startDate.format("YYYY-MM-DD")).then(response => {
+        setStudentGroup(event.target.value)
+        const oid = await getGroupOid(event.target.value)
+        if (oid == null) return
+        getGroupTimetable(oid, startDate.format("YYYY-MM-DD")).then(response => {
             const groupEventsDays: GroupEventsDay[] = response.data
             setGroupTimetable(groupEventsDays)
         })
-        setStudentGroup(event.target.value)
     }
 
     const onChangeTitle = (event: ChangeEvent<HTMLInputElement>) => {
@@ -71,14 +82,16 @@ export const CreationDialog = ({open, closeDialog, editExamId = -1}: DialogProps
     }
 
     // On changing datetime searches classroom timetable
-    const onChangeDateTime = (value: Moment | null) => {
+    const onChangeDateTime = async (value: Moment | null) => {
         setDateTime(value?.utc().format() ?? "")
         const endDate = moment(value?.utc().format() ?? "").add(7, 'days')
         getLocationTimetable(location, moment(value?.utc().format() ?? "").format("YYYYMMDDHHmm"), endDate.format("YYYYMMDDHHmm")).then(response => {
             const classroomEventsDays: ClassroomEventsDay[] = response.data
             setLocationTimetable(classroomEventsDays)
         })
-        getGroupTimetable(studentGroup, moment(value?.utc().format() ?? "").format("YYYY-MM-DD")).then(response => {
+        const oid = await getGroupOid(studentGroup)
+        if (oid == null) return
+        getGroupTimetable(oid, moment(value?.utc().format() ?? "").format("YYYY-MM-DD")).then(response => {
             const groupEventsDays: GroupEventsDay[] = response.data
             setGroupTimetable(groupEventsDays)
         })
@@ -135,7 +148,7 @@ export const CreationDialog = ({open, closeDialog, editExamId = -1}: DialogProps
             const responseData: Exam = r.data[0]
             setEditExam(responseData)
             setStudentInitials(responseData?.studentInitials ?? "");
-            setStudentGroup(responseData?.studentGroup ?? "");
+            setStudentGroup(responseData?.studentGroup.title ?? "");
             setTitle(responseData?.title ?? "");
             setDateTime(moment(responseData?.dateTime).utc().format() ?? moment().utc().format());
             setLocation(responseData?.classroom ?? "");
