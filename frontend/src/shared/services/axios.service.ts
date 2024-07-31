@@ -65,3 +65,5 @@ export const getEducatorTimetable = (initials: string) => axiosService.get(`api/
 export const getLocationTimetable = (location: string, startDate: string, endDate: string) => axiosService.get(`api/timetable/location?location=${location}&startDate=${startDate}&endDate=${endDate}`)
 
 export const getGroupTimetable = (group: string, startDate: string) => axiosService.get(`api/timetable/group?studentGroup=${group}&startDate=${startDate}`)
+
+export const getReport = (ids: number[]) => axiosService.post(`api/report`, ids, {responseType: 'arraybuffer'})

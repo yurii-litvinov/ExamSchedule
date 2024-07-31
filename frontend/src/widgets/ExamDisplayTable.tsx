@@ -1,4 +1,4 @@
-import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
+import {Checkbox, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@mui/material";
 import {Exam, InputExam} from "@entities/Exam";
 import React, {useMemo} from "react";
 import {deleteExam, updateExam} from "@shared/services/axios.service.ts";
@@ -14,13 +14,22 @@ interface TableProps {
     setData: React.Dispatch<React.SetStateAction<Exam[]>>,
     onPassedAction: (exam: Exam) => void,
     onEditAction: (id: number) => void,
+    selected: number[],
+    setSelected: React.Dispatch<React.SetStateAction<number[]>>
 }
 
 
 // Table for exam display
-export const ExamDisplayTable = ({data, setData, onPassedAction, onEditAction}: TableProps) => {
+export const ExamDisplayTable = ({data, setData, onPassedAction, onEditAction, selected, setSelected}: TableProps) => {
     moment.locale('ru')
-    const headers = useMemo(() => ["Cдан/не сдан", "Id", "Студент", "Дисциплина", "Группа", "Тип", "Место проведения", "Дата", "Преподаватели", "", ""], [])
+    const headers = useMemo(() => ["", "Id", "Студент", "Дисциплина", "Группа", "Тип", "Место проведения", "Дата", "Преподаватели","Cдан/не сдан", "", ""], [])
+    const onCheckboxClick = (event: React.ChangeEvent<HTMLInputElement>, element: number) => {
+        if (event.target.checked) {
+            setSelected([element, ...selected])
+        } else {
+            setSelected(selected.filter(num => num != element))
+        }
+    }
 
     const onDeleteClick = (examId: number) => {
         let dataCopy = data;
@@ -70,14 +79,17 @@ export const ExamDisplayTable = ({data, setData, onPassedAction, onEditAction}: 
                 <TableBody>
                     {data.map((row, rowIndex) =>
                         <TableRow key={rowIndex + '.row'}>
-                            <TableCell align={"center"}><IconButton
-                                onClick={() => onPassedClick(row.examId)}><SwapVertIcon/></IconButton></TableCell>
+                            <TableCell key={rowIndex + ".box"} align={"center"}>
+                                <Checkbox onChange={event => onCheckboxClick(event, row.examId)}/>
+                            </TableCell>
                             {[row.examId, row.studentInitials, row.title, row.studentGroup, row.type, row.classroom,
                                 moment(row.dateTime).format("DD.MM.YYYY HH:mm"), row.lecturers.map(l => `${l.lastName} ${l.firstName} ${l.middleName}`).join(", ")]
                                 .map((cell, cellIndex) =>
                                     <TableCell key={rowIndex + "." + cellIndex} align={"center"}
                                                style={{maxWidth: "50px"}}>{cell}</TableCell>)}
 
+                            <TableCell align={"center"}><IconButton
+                                onClick={() => onPassedClick(row.examId)}><SwapVertIcon/></IconButton></TableCell>
                             <TableCell><IconButton className="edit-button"
                                                    onClick={() => onEditClick(row.examId)}><EditIcon/></IconButton></TableCell>
                             <TableCell><IconButton className="delete-button"

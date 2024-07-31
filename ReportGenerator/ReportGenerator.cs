@@ -26,8 +26,6 @@ public class ReportGenerator
     public Stream GenerateReport(IEnumerable<ExamDto> examDtos)
     {
         const string templatePath = "../ReportGenerator/report-template.docx";
-        Console.WriteLine($"Template Path: {Path.GetFullPath(templatePath)}");
-        Console.WriteLine($"{Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}");
         const string outputPath = "../ReportGenerator/generated-report.docx";
 
         var data = (from exam in examDtos

@@ -1,8 +1,8 @@
 import {Layout} from "@shared/ui/layout/Layout.tsx";
 import {ExamDisplayTable} from "@widgets/ExamDisplayTable.tsx";
 import Button from "@mui/material/Button";
-import {ChangeEvent, useEffect, useState} from "react";
-import {getExams, getRoleById, getStaff} from "@shared/services/axios.service.ts";
+import React, {ChangeEvent, useEffect, useState} from "react";
+import {getExams, getReport, getRoleById, getStaff} from "@shared/services/axios.service.ts";
 import {Exam} from "@entities/Exam.ts";
 import {Autocomplete, Chip, Collapse, TextField} from "@mui/material";
 import {ExpandLess, ExpandMore} from "@mui/icons-material";
@@ -25,6 +25,7 @@ export function ScheduleDisplayPage() {
     const [openPassed, setOpenPassed] = useState(false)
     const [openDialog, setOpenDialog] = useState(false)
     const [searchString, setSearchString] = useState("")
+    const [selected, setSelected] = useState<number[]>([])
 
     const handleClick = () => {
         setOpenPassed(!openPassed)
@@ -74,6 +75,19 @@ export function ScheduleDisplayPage() {
     const onEditAction = (id: number) => {
         setEditExamId(id)
         setOpenDialog(true)
+    }
+
+    const onGenerateReport = (ids: number[]) => {
+        getReport(ids).then(response => {
+            const url = window.URL.createObjectURL(new Blob([response.data],
+                {type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download',
+                "report.docx");
+            document.body.appendChild(link);
+            link.click();
+        })
     }
 
 
@@ -129,21 +143,24 @@ export function ScheduleDisplayPage() {
                     <h1>Расписание сдач</h1>
                     {forEmployee &&
                         <div className="table-actions"
-                             style={{display: "flex", flexDirection: "column", justifyContent: "space-around"}}>
-                            <Button className="create-exam-button" variant={"contained"}
+                             style={{display: "flex", flexDirection: "column", justifyContent: "space-between"}}>
+                            <Button style={{margin: "3px 0px"}} className="generate-report-button" variant={"outlined"}
+                                    onClick={() => onGenerateReport(selected)}>Сгенерировать приказ</Button>
+                            <Button style={{margin: "3px 0px"}} className="create-exam-button" variant={"contained"}
                                     onClick={onOpenDialog}>Добавить</Button>
                         </div>
                     }
                 </div>
                 <ExamDisplayTable data={searchFilter(tableData)} setData={setTableData} onPassedAction={addToPassed}
-                                  onEditAction={onEditAction}/>
+                                  onEditAction={onEditAction} selected={selected} setSelected={setSelected}/>
                 <Button className="show-passed-button" color={"inherit"} onClick={handleClick}>
                     <h1>Сдано</h1>
                     {openPassed ? <ExpandLess/> : <ExpandMore/>}
                 </Button>
                 <Collapse in={openPassed} timeout="auto" unmountOnExit>
                     <ExamDisplayTable data={searchFilter(passedData)} setData={setPassedData}
-                                      onPassedAction={addToUnpassed} onEditAction={onEditAction}/>
+                                      onPassedAction={addToUnpassed} onEditAction={onEditAction} selected={selected}
+                                      setSelected={setSelected}/>
                 </Collapse>
             </div>
         </Layout>
