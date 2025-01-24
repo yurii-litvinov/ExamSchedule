@@ -2,6 +2,7 @@
 // Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
+// ReSharper disable RedundantNameQualifier
 namespace ExamSchedule.Core;
 
 using ExamSchedule.Core.Models;
@@ -22,9 +23,14 @@ public class ScheduleContext : DbContext
     }
 
     /// <summary>
-    /// Gets or sets Employee table.
+    /// Gets or sets Staff table.
     /// </summary>
-    public virtual DbSet<Employee> Employees { get; set; } = null!;
+    public virtual DbSet<Staff> Staffs { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets Role table.
+    /// </summary>
+    public virtual DbSet<Role> Roles { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets Exam table.
@@ -42,11 +48,6 @@ public class ScheduleContext : DbContext
     public virtual DbSet<ExamType> ExamTypes { get; set; } = null!;
 
     /// <summary>
-    /// Gets or sets Lecturer table.
-    /// </summary>
-    public virtual DbSet<Lecturer> Lecturers { get; set; } = null!;
-
-    /// <summary>
     /// Gets or sets Location table.
     /// </summary>
     public virtual DbSet<Location> Locations { get; set; } = null!;
@@ -55,6 +56,11 @@ public class ScheduleContext : DbContext
     /// Gets or sets Student table.
     /// </summary>
     public virtual DbSet<Student> Students { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets Student_Group table.
+    /// </summary>
+    public virtual DbSet<StudentGroup> StudentsGroups { get; set; } = null!;
 
     /// <inheritdoc/>
     protected override void OnModelCreating(ModelBuilder modelBuilder)

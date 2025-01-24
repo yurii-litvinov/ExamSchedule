@@ -1,4 +1,4 @@
-// <copyright file="InputEmployee.cs" company="Gleb Kargin">
+// <copyright file="InputStaffWithoutRole.cs" company="Gleb Kargin">
 // Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 /// <summary>
 /// Employee input model.
 /// </summary>
-public class InputEmployee
+public class InputStaffWithoutRole
 {
     /// <summary>
     /// Gets or sets Email column.
@@ -20,11 +20,11 @@ public class InputEmployee
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets Checksum column.
+    /// Gets or sets Password column.
     /// </summary>
     [MaxLength(50)]
-    [Column("checksum")]
-    public string Checksum { get; set; } = string.Empty;
+    [Column("password")]
+    public string Password { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets FirstName column.

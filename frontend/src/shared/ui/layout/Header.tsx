@@ -11,7 +11,9 @@ import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import {useNavigate} from "react-router-dom";
+import {logout} from "@shared/services/auth.service.ts";
 
+// Base header realisation
 export default function Header() {
     const navigate = useNavigate()
 
@@ -139,12 +141,7 @@ export default function Header() {
                     </Box>
 
                     {window.location.pathname !== '/login' && <Box sx={{flexGrow: 0}}>
-                        {/*<Tooltip title={t("header.notifications")}>*/}
-                        {/*    <IconButton>*/}
-                        {/*        <NotificationsActive sx={{mr: 2, color: 'white'}}/>*/}
-                        {/*    </IconButton>*/}
-                        {/*</Tooltip>*/}
-                        <IconButton onClick={handleOpenUserMenu}>
+                        <IconButton className="menu-button" onClick={handleOpenUserMenu}>
                             <AccountCircleIcon sx={{color: 'white'}}/>
                         </IconButton>
                         <Menu
@@ -163,7 +160,7 @@ export default function Header() {
                             open={anchorElUser != null}
                             onClose={handleCloseUserMenu}
                         >
-                            <MenuItem key={"Профиль"} onClick={() =>
+                            <MenuItem className="profile-button" key={"Профиль"} onClick={() =>
                                 handleCloseUserMenuAndNavigate("/profile")
                             }>
                                 <Typography
@@ -174,9 +171,9 @@ export default function Header() {
                                     }}
                                 > Профиль </Typography>
                             </MenuItem>
-                            <MenuItem key={"Выйти"}>
+                            <MenuItem className="logout-button" key={"Выйти"}>
                                 <Typography
-                                    data-cy="logout"
+                                    onClick={() => logout()}
                                     textAlign="center"
                                     component="a"
                                     href={"/login"}

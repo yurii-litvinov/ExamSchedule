@@ -1,13 +1,20 @@
 import {createBrowserRouter} from "react-router-dom";
 import {ScheduleDisplayPage} from "@pages/ScheduleDisplayPage.tsx"
+import {LoginPage} from "@pages/LoginPage.tsx";
+import {NotFoundPage} from "@pages/NotFoundPage.tsx";
 
+// Create routes
 export const routes = createBrowserRouter([
     {
-        path: "/create",
-        element: <ScheduleDisplayPage forEmployee={false}/>
+        path: "/",
+        element: <ScheduleDisplayPage/>
     },
     {
-        path: "/",
-        element: <ScheduleDisplayPage forEmployee={true}/>
+        path: "/login",
+        element: <LoginPage/>
+    },
+    {
+        path: "*",
+        element: <NotFoundPage/>
     }
 ])

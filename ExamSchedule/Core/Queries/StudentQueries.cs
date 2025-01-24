@@ -4,6 +4,7 @@
 
 namespace ExamSchedule.Core.Queries;
 
+// ReSharper disable once RedundantNameQualifier
 using ExamSchedule.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,12 +36,18 @@ public class StudentQueries(ScheduleContext context)
     /// <returns>Response status.</returns>
     public async Task<int> InsertStudent(InputStudent inputStudent)
     {
+        var group = context.StudentsGroups.FirstOrDefault(group => group.Title == inputStudent.StudentGroup);
+        if (group == null)
+        {
+            throw new Exception("Group not found");
+        }
+
         var student = new Student()
         {
             FirstName = inputStudent.FirstName,
             LastName = inputStudent.LastName,
             MiddleName = inputStudent.MiddleName,
-            StudentGroup = inputStudent.StudentGroup,
+            StudentGroupOid = group.Oid,
         };
         context.Students.Add(student);
         await context.SaveChangesAsync();
@@ -59,9 +66,9 @@ public class StudentQueries(ScheduleContext context)
         {
             var prev = context.Students.First(student => student.StudentId == id);
 
-            prev.StudentGroup = string.IsNullOrEmpty(inputStudent.StudentGroup)
-                ? prev.StudentGroup
-                : inputStudent.StudentGroup;
+            prev.StudentGroupOid = string.IsNullOrEmpty(inputStudent.StudentGroup)
+                ? prev.StudentGroupOid
+                : context.StudentsGroups.FirstOrDefault(group => group.Title == inputStudent.StudentGroup)?.Oid ?? 0;
             prev.FirstName = string.IsNullOrEmpty(inputStudent.FirstName) ? prev.FirstName : inputStudent.FirstName;
             prev.LastName = string.IsNullOrEmpty(inputStudent.LastName) ? prev.LastName : inputStudent.LastName;
             prev.MiddleName = string.IsNullOrEmpty(inputStudent.MiddleName) ? prev.MiddleName : inputStudent.MiddleName;

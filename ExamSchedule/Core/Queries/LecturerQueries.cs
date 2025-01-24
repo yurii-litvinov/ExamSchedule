@@ -2,6 +2,7 @@
 // Copyright (c) Gleb Kargin. All rights reserved.
 // </copyright>
 
+// ReSharper disable RedundantNameQualifier
 namespace ExamSchedule.Core.Queries;
 
 using ExamSchedule.Core.Models;
@@ -12,17 +13,19 @@ using Microsoft.EntityFrameworkCore;
 /// </summary>
 public class LecturerQueries(ScheduleContext context)
 {
+    private const int LecturerRoleId = (int)EnumRoles.LecturerRole;
+
     /// <summary>
     /// Gets lecturers.
     /// </summary>
     /// <param name="id">Lecturer id, by default set to null.</param>
     /// <returns>List of lecturers.</returns>
-    public async Task<IEnumerable<Lecturer>> GetLecturers(int? id = null)
+    public async Task<IEnumerable<Staff>> GetLecturers(int? id = null)
     {
-        var result = context.Lecturers.AsQueryable();
+        var result = context.Staffs.Where(staff => staff.RoleId == LecturerRoleId);
         if (id != null)
         {
-            result = result.Where(lecturer => lecturer.LecturerId == id);
+            result = result.Where(staff => staff.StaffId == id);
         }
 
         return await result.ToListAsync();
@@ -33,64 +36,25 @@ public class LecturerQueries(ScheduleContext context)
     /// </summary>
     /// <param name="inputLecturer">Input lecturer.</param>
     /// <returns>Response status.</returns>
-    public async Task<IResult> InsertLecturer(InputLecturer inputLecturer)
+    public async Task<IResult> InsertLecturer(InputStaffWithoutRole inputLecturer)
     {
-        if (inputLecturer.Checksum == string.Empty || inputLecturer.Email == string.Empty)
+        if (inputLecturer.Password == string.Empty || inputLecturer.Email == string.Empty)
         {
             return Results.BadRequest("Checksum and Email fields are required");
         }
 
-        var newLecturer = new Lecturer()
+        var checksum = BCrypt.Net.BCrypt.HashPassword(inputLecturer.Password);
+        var newLecturer = new Staff()
         {
             FirstName = inputLecturer.FirstName,
             LastName = inputLecturer.LastName,
             MiddleName = inputLecturer.MiddleName,
             Email = inputLecturer.Email,
-            Checksum = inputLecturer.Checksum,
+            Password = checksum,
+            RoleId = LecturerRoleId,
         };
-        context.Lecturers.Add(newLecturer);
+        context.Staffs.Add(newLecturer);
         await context.SaveChangesAsync();
-        return Results.Ok(newLecturer.LecturerId);
-    }
-
-    /// <summary>
-    /// Updates lecturer.
-    /// </summary>
-    /// <param name="id">Lecturer id.</param>
-    /// <param name="inputLecturer">Input lecturer.</param>
-    /// <returns>Response status.</returns>
-    public async Task<IResult> UpdateLecturer(int id, InputLecturer inputLecturer)
-    {
-        try
-        {
-            var prev = context.Lecturers.First(lecturer => lecturer.LecturerId == id);
-
-            prev.Email = string.IsNullOrEmpty(inputLecturer.Email) ? prev.Email : inputLecturer.Email;
-            prev.Checksum = string.IsNullOrEmpty(inputLecturer.Checksum) ? prev.Checksum : inputLecturer.Checksum;
-            prev.FirstName = string.IsNullOrEmpty(inputLecturer.FirstName) ? prev.FirstName : inputLecturer.FirstName;
-            prev.LastName = string.IsNullOrEmpty(inputLecturer.LastName) ? prev.LastName : inputLecturer.LastName;
-            prev.MiddleName = string.IsNullOrEmpty(inputLecturer.MiddleName)
-                ? prev.MiddleName
-                : inputLecturer.MiddleName;
-            await context.SaveChangesAsync();
-            return Results.Ok();
-        }
-        catch (InvalidOperationException exception)
-        {
-            return Results.BadRequest(exception);
-        }
-    }
-
-    /// <summary>
-    /// Deletes lecturer.
-    /// </summary>
-    /// <param name="id">Lecturer id.</param>
-    /// <returns>Response status.</returns>
-    public async Task<IResult> DeleteLecturer(int id)
-    {
-        var deletedLecturer = context.Lecturers.First(lecturer => lecturer.LecturerId == id);
-        context.Lecturers.Remove(deletedLecturer);
-        await context.SaveChangesAsync();
-        return Results.Ok();
+        return Results.Ok(newLecturer.StaffId);
     }
 }

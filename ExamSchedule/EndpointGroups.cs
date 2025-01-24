@@ -4,9 +4,13 @@
 
 namespace ExamSchedule;
 
+// ReSharper disable RedundantNameQualifier
+// ReSharper disable BadParensLineBreaks
 using ExamSchedule.Core;
 using ExamSchedule.Core.Models;
 using ExamSchedule.Core.Queries;
+using Microsoft.AspNetCore.Authorization;
+using TimetableAdapter;
 
 /// <summary>
 /// Endpoints groups.
@@ -28,7 +32,9 @@ public static class EndpointGroups
             (int examId, ScheduleContext context) => new ExamQueries(context).GetExams(examId).Result);
         group.MapPost(
             "/",
-            (InputExam exam, ScheduleContext context) => new ExamQueries(context).InsertExam(exam).Result);
+            [Authorize(Policy = "OnlyEmployee")]
+            (InputExam exam, ScheduleContext context) =>
+                new ExamQueries(context).InsertExam(exam).Result);
         group.MapPut(
             "/",
             (int examId, InputExam inputExam, ScheduleContext context) =>
@@ -53,6 +59,7 @@ public static class EndpointGroups
             (int studentId, ScheduleContext context) => new StudentQueries(context).GetStudents(studentId).Result);
         group.MapPost(
             "/",
+            [Authorize(Policy = "OnlyEmployee")]
             (InputStudent inputStudent, ScheduleContext context) =>
                 new StudentQueries(context).InsertStudent(inputStudent));
         group.MapPut(
@@ -76,16 +83,19 @@ public static class EndpointGroups
         group.MapGet("/", (ScheduleContext context) => new EmployeeQueries(context).GetEmployees().Result);
         group.MapPost(
             "/",
-            (InputEmployee inputEmployee, ScheduleContext context) =>
-                new EmployeeQueries(context).InsertEmployee(inputEmployee).Result);
+            [Authorize(Policy = "OnlyAdministrator")]
+            (InputStaffWithoutRole inputStaff, ScheduleContext context) =>
+                new EmployeeQueries(context).InsertEmployee(inputStaff).Result);
         group.MapPut(
             "/",
-            (int employeeId, InputEmployee inputEmployee, ScheduleContext context) =>
-                new EmployeeQueries(context).UpdateEmployee(employeeId, inputEmployee).Result);
+            [Authorize(Policy = "OnlyAdministrator")]
+            (int employeeId, InputStaff inputStaff, ScheduleContext context) =>
+                new StaffQueries(context).UpdateStaff(employeeId, inputStaff).Result);
         group.MapDelete(
             "/{employeeId:int}",
+            [Authorize(Policy = "OnlyAdministrator")]
             (int employeeId, ScheduleContext context) =>
-                new EmployeeQueries(context).DeleteEmployee(employeeId).Result);
+                new StaffQueries(context).DeleteStaff(employeeId).Result);
 
         return group;
     }
@@ -103,16 +113,19 @@ public static class EndpointGroups
             (int lecturerId, ScheduleContext context) => new LecturerQueries(context).GetLecturers(lecturerId).Result);
         group.MapPost(
             "/",
-            (InputLecturer inputLecturer, ScheduleContext context) =>
-                new LecturerQueries(context).InsertLecturer(inputLecturer).Result);
+            [Authorize(Policy = "OnlyAdministrator")]
+            (InputStaffWithoutRole inputStaff, ScheduleContext context) =>
+                new LecturerQueries(context).InsertLecturer(inputStaff).Result);
         group.MapPut(
             "/",
-            (int lecturerId, InputLecturer inputLecturer, ScheduleContext context) =>
-                new LecturerQueries(context).UpdateLecturer(lecturerId, inputLecturer).Result);
+            [Authorize(Policy = "OnlyAdministrator")]
+            (int lecturerId, InputStaff inputStaff, ScheduleContext context) =>
+                new StaffQueries(context).UpdateStaff(lecturerId, inputStaff).Result);
         group.MapDelete(
             "/{lecturerId:int}",
+            [Authorize(Policy = "OnlyAdministrator")]
             (int lecturerId, ScheduleContext context) =>
-                new LecturerQueries(context).DeleteLecturer(lecturerId).Result);
+                new StaffQueries(context).DeleteStaff(lecturerId).Result);
 
         return group;
     }
@@ -127,7 +140,7 @@ public static class EndpointGroups
         group.MapGet("/", (ScheduleContext context) => new LocationQueries(context).GetLocations().Result);
         group.MapPost(
             "/",
-            (Location location, ScheduleContext context) =>
+            (InputLocation location, ScheduleContext context) =>
                 new LocationQueries(context).InsertLocation(location).Result);
         group.MapPut(
             "/",
@@ -137,6 +150,56 @@ public static class EndpointGroups
             "/{locationId:int}",
             (int locationId, ScheduleContext context) =>
                 new LocationQueries(context).DeleteLocation(locationId).Result);
+
+        return group;
+    }
+
+    /// <summary>
+    /// Timetable endpoints.
+    /// </summary>
+    /// <param name="group"><inheritdoc cref="RouteGroupBuilder" /></param>
+    /// <returns>Timetable route group builder.</returns>
+    public static RouteGroupBuilder TimetableGroup(this RouteGroupBuilder group)
+    {
+        group.MapGet(
+            "/educator/",
+            (string lecturerInitials) => new TimetableQueries().GetEducatorsTimetable(lecturerInitials));
+        group.MapGet(
+            "/location/",
+            (string location, string startDate, string endDate) =>
+                new TimetableQueries().GetClassroomsTimetable(location, startDate, endDate));
+        group.MapGet(
+            "/group/",
+            (int studentGroupOid, string startDate) =>
+                new TimetableQueries().GetGroupTimetable(studentGroupOid, startDate));
+
+        return group;
+    }
+
+    /// <summary>
+    /// Staff endpoints.
+    /// </summary>
+    /// <param name="group"><inheritdoc cref="RouteGroupBuilder" /></param>
+    /// <returns>Staff route group builder.</returns>
+    public static RouteGroupBuilder StaffGroup(this RouteGroupBuilder group)
+    {
+        group.MapGet("/", (ScheduleContext context) => new StaffQueries(context).GetStaffs().Result);
+        group.MapGet(
+            "/{staffId:int}",
+            (int staffId, ScheduleContext context) => new StaffQueries(context).GetStaffs(staffId).Result);
+        group.MapGet(
+            "/{staffId:int}/role",
+            (int staffId, ScheduleContext context) => new StaffQueries(context).GetStaffRole(staffId));
+        group.MapPut(
+            "/",
+            [Authorize(Policy = "OnlyAdministrator")]
+            (int staffId, InputStaff inputStaff, ScheduleContext context) =>
+                new StaffQueries(context).UpdateStaff(staffId, inputStaff).Result);
+        group.MapDelete(
+            "/{staffId:int}",
+            [Authorize(Policy = "OnlyAdministrator")]
+            (int staffId, ScheduleContext context) =>
+                new StaffQueries(context).DeleteStaff(staffId).Result);
 
         return group;
     }

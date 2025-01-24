@@ -40,5 +40,5 @@ public class ExamLecturer
     /// <summary>
     /// Gets or sets Lecturer relation.
     /// </summary>
-    public Lecturer Lecturer { get; set; } = null!;
+    public Staff Lecturer { get; set; } = null!;
 }
