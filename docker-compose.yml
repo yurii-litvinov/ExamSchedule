@@ -1,0 +1,45 @@
+version: "3.9"
+services:
+  db:
+    container_name: examschedule_db
+    image: postgres:14.5-alpine
+    volumes:
+      - ./init-db/:/docker-entrypoint-initdb.d
+      - ./pg-data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    container_name: examschedule
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ENVIRONMENT=Docker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    build:
+      dockerfile: Dockerfile
+    volumes:
+      - './:/examschedule'
+    ports:
+      - "5000:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+        
+  frontend:
+    container_name: frontend
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+        
